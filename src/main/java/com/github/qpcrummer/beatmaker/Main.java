@@ -6,6 +6,9 @@ import com.github.qpcrummer.beatmaker.processing.BeatManager;
 import imgui.app.Application;
 import imgui.app.Configuration;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.Logger;
 
 public class Main extends Application {
@@ -25,6 +28,15 @@ public class Main extends Application {
         logger.info("Loading Christmas Celebrator Song Editor");
         Data.initialize();
         BeatManager.initialize();
+
+        Path saveDir = Path.of("saves\\");
+        if (Files.notExists(saveDir)) {
+            try {
+                Files.createDirectory(saveDir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
