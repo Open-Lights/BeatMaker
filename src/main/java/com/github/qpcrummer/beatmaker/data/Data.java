@@ -1,11 +1,13 @@
 package com.github.qpcrummer.beatmaker.data;
 
 import com.github.qpcrummer.beatmaker.gui.Chart;
+import imgui.type.ImDouble;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class Data {
@@ -41,9 +43,21 @@ public class Data {
     public static final double MINIMUM_BEAT_LENGTH = 0.2;
 
     /**
+     * Time intervals to set
+     */
+    public static final ImDouble[] timeIntervals = new ImDouble[] {new ImDouble(), new ImDouble()};
+
+    /**
+     * Whether to use the time intervals
+     */
+    public static boolean doIntervals;
+
+    /**
      * Fills the availableChannels List
      */
     public static void initialize() {
+        timeIntervals[0].set(0.000);
+        timeIntervals[1].set(0.000);
         for (int i = 0; i < totalChannels; i++) {
             availableChannels.add(i);
             blinkBooleans.add(false);
@@ -57,10 +71,10 @@ public class Data {
      */
     public static void updateChannels(int newAmount) {
         if (newAmount > totalChannels) {
-            availableChannels.addAll(Arrays.asList(difference(newAmount, totalChannels, true, false, 1)));
+            availableChannels.addAll(difference(newAmount - 1, totalChannels - 1, true, false));
             totalChannels = newAmount;
         } else if (newAmount < totalChannels) {
-            for (int n : difference(totalChannels, newAmount, true, false, 1)) {
+            for (Integer n : difference(totalChannels - 1, newAmount - 1, true, false)) {
                 if (availableChannels.contains(n)) {
                     availableChannels.remove(n);
                 } else {
@@ -86,42 +100,21 @@ public class Data {
      * Gets an array of numbers between two integers
      * @param upperBound Largest integer
      * @param lowerBound Smallest integer
-     * @param includeUpper Whether to include the upperBound in the result
-     * @param includeLower Whether to include the lowerBound in the result
-     * @param lowerBy Lowers all values in the array be this amount
+     * @param includeUpperBound Whether to include the upperBound in the result
+     * @param includeLowerBound Whether to include the lowerBound in the result
      * @return Returns an array of integers
      */
-    private static Integer[] difference(int upperBound, int lowerBound, boolean includeUpper, boolean includeLower, int lowerBy) {
-        int difference = upperBound - lowerBound;
-
-        if (includeLower && includeUpper) {
-            difference++;
-        } else if (!includeLower && !includeUpper) {
-            difference--;
+    private static List<Integer> difference(int upperBound, int lowerBound, boolean includeUpperBound, boolean includeLowerBound) {
+        List<Integer> numbers = new ArrayList<>();
+        if (includeUpperBound) {
+            upperBound++;
         }
-
-        Integer[] result = new Integer[difference];
-
-        int startingPos;
-        if (includeLower) {
-            startingPos = lowerBound;
-        } else {
-            startingPos = lowerBound + 1;
+        if (!includeLowerBound) {
+            lowerBound++;
         }
-
-        int endingPos;
-        if (includeUpper) {
-            endingPos = upperBound + 1;
-        } else {
-            endingPos = upperBound;
+        for (int i = lowerBound; i < upperBound; i++) {
+            numbers.add(i);
         }
-
-        int index = 0;
-        for (int i = startingPos; i < endingPos; i++) {
-            result[index] = i - lowerBy;
-            index++;
-        }
-
-        return result;
+        return numbers;
     }
 }

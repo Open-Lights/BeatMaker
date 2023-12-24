@@ -4,6 +4,7 @@ import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.processing.Generator;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiStyleVar;
@@ -15,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class MainGUI {
     private static float PANEL_WIDTH = 600; // Initial width of the left panel (should be about 70% of the whole window size)
     public static final float TOOLBAR_HEIGHT = 20; // Height of the toolbar
-    private static boolean isPlayButtonPressed = false; // Flag to toggle Play/Pause button
+    public static boolean isPlayButtonPressed = false; // Flag to toggle Play/Pause button
     private static final float BOX_LENGTH = 50.0f; // Length of each box
     private static float maxPanelWidth; // Maximum width available for the Right Panel
     public static final float CHART_WIDTH = 150.0f;
@@ -55,10 +56,35 @@ public class MainGUI {
                     Data.charts.add(new Chart(CHART_WIDTH, ThreadLocalRandom.current().nextInt(), true));
                 }
                 if (ImGui.menuItem("Remove Beat Guide")) {
+                    BeatGuideInteractionGUI.removal = true;
+                    BeatGuideInteractionGUI.enable = true;
+                }
+                if (ImGui.menuItem("Merge Beat Guides")) {
+                    BeatGuideInteractionGUI.removal = false;
                     BeatGuideInteractionGUI.enable = true;
                 }
                 if (ImGui.menuItem("Channel Configuration")) {
                     ChannelInteractionGUI.enable = true;
+                }
+                ImGui.endMenu();
+            }
+
+            // Generate
+            if (ImGui.beginMenu("Generate")) {
+                if (ImGui.menuItem("Generate Percussion Beat Files")) {
+                    Generator.generatePercussionChartsForSong();
+                }
+                if (ImGui.menuItem("Generate Complex Beat Files")) {
+                    Generator.generateComplexChartsForSong();
+                }
+                if (ImGui.menuItem("Generate Beat Extractor Beat Files")) {
+                    Generator.generateWithBeatExtractor();
+                }
+                if (ImGui.menuItem("Generate Onset Extractor Beat Files")) {
+                    Generator.generateWithOnsetExtractor();
+                }
+                if (ImGui.menuItem("Generator Configuration")) {
+                    BeatGenerationGUI.enable = true;
                 }
                 ImGui.endMenu();
             }
@@ -85,6 +111,16 @@ public class MainGUI {
                 BeatManager.resetBeats();
                 isPlayButtonPressed = false;
             }
+
+            // Music Interval
+            if (ImGui.checkbox("Interval", Data.doIntervals)) {
+                Data.doIntervals = !Data.doIntervals;
+            }
+
+            ImGui.pushItemWidth(100);
+            ImGui.inputDouble("##SongIntervalInput1", Data.timeIntervals[0], 0, 0, "%.3f");
+            ImGui.inputDouble("##SongIntervalInput2", Data.timeIntervals[1], 0, 0, "%.3f");
+            ImGui.popItemWidth();
 
             // Timer Text Box (on the far right)
             ImGui.sameLine(ImGui.getContentRegionMaxX() - ImGui.calcTextSize("000.000").x);

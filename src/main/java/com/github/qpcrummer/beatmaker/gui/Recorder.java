@@ -81,7 +81,7 @@ public class Recorder {
                 }
 
                 // Completed
-                if (MusicPlayer.getPositionMilliseconds() >= MusicPlayer.getSongLengthMilliseconds()) {
+                if (MusicPlayer.getPositionMilliseconds() >= MusicPlayer.getSongLengthMilliseconds() || !MusicPlayer.playing) {
                     heldTime = -1;
                     recording = false;
                     Data.charts.add(recordedChart);
@@ -89,6 +89,7 @@ public class Recorder {
                     countdownTimer = -1;
                     countdown.set("Recording Complete");
                     decrement = false;
+                    enable = false;
                 }
             }
 

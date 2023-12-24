@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.utils.ListUtils;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -50,12 +51,14 @@ public class Chart {
         ImGui.setCursorPosX(x);
         if (ImGui.beginPopup("Channel Editing##" + this.id)) {
 
+            boolean reorder = false;
             ListIterator<Integer> iterator1 = this.channels.listIterator();
             while (iterator1.hasNext()) {
                 int i = iterator1.next();
                 if (ImGui.checkbox(String.valueOf(i), true)) {
                     Data.availableChannels.add(i);
                     iterator1.remove();
+                    reorder = true;
                 }
             }
 
@@ -65,7 +68,13 @@ public class Chart {
                 if (ImGui.checkbox(String.valueOf(i), false)) {
                     this.channels.add(i);
                     iterator2.remove();
+                    reorder = true;
                 }
+            }
+
+            if (reorder) {
+                ListUtils.sortInt(this.channels);
+                ListUtils.sortInt(Data.availableChannels);
             }
 
             ImGui.endPopup();
