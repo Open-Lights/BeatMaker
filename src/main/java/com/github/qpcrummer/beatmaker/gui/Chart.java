@@ -22,6 +22,7 @@ public class Chart {
     private final int id;
     private boolean showChannelEditPopup = false;
     private int index = 0;
+    private boolean immutable = false;
 
     public Chart(float width, int id, boolean generateEmptyTimeStamp) {
         this.width = width;
@@ -31,6 +32,15 @@ public class Chart {
         }
     }
 
+    public Chart(float width, int id, boolean generateEmptyTimeStamp, boolean immutable) {
+        this.width = width;
+        this.id = id;
+        if (generateEmptyTimeStamp) {
+            this.timestamps.add(generateEmptyImDoubleArray());
+        }
+        this.immutable = immutable;
+    }
+
     // Rendering logic for the chart
     public void render(float x) {
         ImVec2 cursorScreenPos = ImGui.getCursorScreenPos();
@@ -38,8 +48,10 @@ public class Chart {
         drawBorder(cursorScreenPos.x, cursorScreenPos.y, width + 15, ImGui.getIO().getDisplaySize().y - 6 * MainGUI.TOOLBAR_HEIGHT);
 
         ImGui.setCursorPosX(x);
-        if (ImGui.button("Edit Channel Info##" + this.id)) {
-            this.showChannelEditPopup = true;
+        if (ImGui.button(immutable ? "Immutable Channel##" + this.id : "Edit Channel Info##" + this.id)) {
+            if (!immutable) {
+                this.showChannelEditPopup = true;
+            }
         }
 
         ImGui.setCursorPosX(x);

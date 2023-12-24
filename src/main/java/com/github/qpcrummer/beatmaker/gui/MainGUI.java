@@ -6,6 +6,7 @@ import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
 import com.github.qpcrummer.beatmaker.processing.Generator;
 import imgui.ImGui;
+import imgui.ImVec4;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
@@ -88,6 +89,17 @@ public class MainGUI {
                 }
                 ImGui.endMenu();
             }
+
+            // Effects
+
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGuiCol.MenuBarBg);
+            if (ImGui.button("Effects")) {
+                EffectSelectionGUI.primeGUI();
+                ImGui.openPopup("Effect Selection");
+            }
+            ImGui.popStyleColor();
+
+            EffectSelectionGUI.render();
 
             // Record Menu
             if (ImGui.menuItem("Record")) {
