@@ -93,7 +93,7 @@ public class FileExplorer {
                     Path path = selectedFile.toPath();
                     String fileExtension = getFileExtension(path.getFileName().toString());
 
-                    if (beatFileMode && fileExtension.equals("txt")) {
+                    if (beatFileMode && fileExtension.equals("json")) {
                         Main.logger.info("Uploading beat file: " + path);
                         BeatFile.loadBeatFile(path);
                         reset();
