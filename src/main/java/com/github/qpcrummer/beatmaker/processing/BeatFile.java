@@ -20,9 +20,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class BeatFile {
-    private static final byte BLINK = 0;
+    private static final byte OFF = 0;
     private static final byte ON = 1;
-    private static final byte OFF = 2;
 
     public static void saveAll() {
         Map<String, SortedMap<Integer, Byte>> data = new HashMap<>();
@@ -51,7 +50,8 @@ public class BeatFile {
             double last = timestamp[1].get();
 
             if (last == 0 || first + Data.MINIMUM_BEAT_LENGTH > last) {
-                data.put(secondsToMilliseconds(first), BLINK);
+                data.put(secondsToMilliseconds(first), ON);
+                data.put(secondsToMilliseconds(first + 0.2), OFF);
             } else {
                 data.put(secondsToMilliseconds(first), ON);
                 data.put(secondsToMilliseconds(last), OFF);
@@ -142,9 +142,8 @@ public class BeatFile {
 
                 for (int timestamp: data.keySet()) {
                     switch (data.get(timestamp)) {
-                        case 0 -> imDoubles.add(new ImDouble[] {new ImDouble(millisecondsToSecondsFormatted(timestamp)), new ImDouble(0.000)});
-                        case 1 -> heldBeats = new ImDouble(millisecondsToSecondsFormatted(timestamp));
-                        case 2 -> imDoubles.add(new ImDouble[] {heldBeats, new ImDouble(millisecondsToSecondsFormatted(timestamp))});
+                        case 0 -> heldBeats = new ImDouble(millisecondsToSecondsFormatted(timestamp));
+                        case 1 -> imDoubles.add(new ImDouble[] {heldBeats, new ImDouble(millisecondsToSecondsFormatted(timestamp))});
                     }
                 }
                 chart.timestamps.addAll(imDoubles);
