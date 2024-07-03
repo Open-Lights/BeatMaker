@@ -6,7 +6,6 @@ import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
 import com.github.qpcrummer.beatmaker.processing.Generator;
 import imgui.ImGui;
-import imgui.ImVec4;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
