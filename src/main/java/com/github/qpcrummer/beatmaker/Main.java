@@ -20,7 +20,10 @@ public class Main extends Application {
     public static final Logger logger = Logger.getLogger("Christmas Celebrator Beat Editor");
 
     public static void main(String[] args) {
-        launch(new Main());
+        //if (DemucsInstaller.needsInstallation()) {
+            launch(new InstallationGUI());
+        //}
+        //launch(new Main());
     }
 
     @Override
@@ -31,7 +34,7 @@ public class Main extends Application {
         BeatManager.initialize();
         MusicPlayer.initialize();
 
-        Path saveDir = Path.of("saves\\");
+        Path saveDir = Path.of("saves/");
         if (Files.notExists(saveDir)) {
             try {
                 Files.createDirectory(saveDir);

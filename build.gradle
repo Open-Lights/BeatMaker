@@ -1,7 +1,13 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'org.graalvm.buildtools.native' version '0.10.2'
+    id "application"
 }
+
+import org.gradle.internal.os.OperatingSystem
+
+project.ext.lwjglVersion = "3.3.3"
 
 group = 'com.github.qpcrummer'
 version = '1.0.0'
@@ -14,6 +20,26 @@ repositories {
     }
 }
 
+switch (OperatingSystem.current()) {
+    case OperatingSystem.LINUX:
+        project.ext.lwjglNatives = "natives-linux"
+        def osArch = System.getProperty("os.arch")
+        if (osArch.startsWith("arm") || osArch.startsWith("aarch64")) {
+            project.ext.lwjglNatives += osArch.contains("64") || osArch.startsWith("armv8") ? "-arm64" : "-arm32"
+        } else if  (osArch.startsWith("ppc")) {
+            project.ext.lwjglNatives += "-ppc64le"
+        } else if  (osArch.startsWith("riscv")) {
+            project.ext.lwjglNatives += "-riscv64"
+        }
+        break
+    case OperatingSystem.WINDOWS:
+        def osArch = System.getProperty("os.arch")
+        project.ext.lwjglNatives = osArch.contains("64")
+                ? "natives-windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
+                : "natives-windows-x86"
+        break
+}
+
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -21,6 +47,26 @@ dependencies {
     implementation 'be.tarsos.dsp:core:2.5'
     implementation 'be.tarsos.dsp:jvm:2.5'
     implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'com.github.oshi:oshi-core:6.6.1'
+
+    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+
+    implementation "org.lwjgl:lwjgl"
+    implementation "org.lwjgl:lwjgl-assimp"
+    implementation "org.lwjgl:lwjgl-glfw"
+    implementation "org.lwjgl:lwjgl-openal"
+    implementation "org.lwjgl:lwjgl-opengl"
+    implementation "org.lwjgl:lwjgl-stb"
+    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
+    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+}
+
+application {
+    mainClassName = 'com.github.qpcrummer.beatmaker.Main'
 }
 
 test {
