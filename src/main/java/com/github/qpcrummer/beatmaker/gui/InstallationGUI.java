@@ -7,11 +7,13 @@ import imgui.ImVec2;
 import imgui.app.Application;
 import imgui.app.Configuration;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImInt;
 import org.lwjgl.opengl.GL11C;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,6 +30,11 @@ public class InstallationGUI extends Application {
     private int[] LOADING_BAR_TEXTURE;
     public static AtomicInteger progress = new AtomicInteger(100);
     public static AtomicReference<String> currentTask = new AtomicReference<>("Loading...");
+    public static AtomicBoolean renderDropdownSelection = new AtomicBoolean(false);
+    public static AtomicReference<String[]> dropdownOptions = new AtomicReference<>();
+    ImInt index = new ImInt(0);
+    public static AtomicInteger selectedIndex = new AtomicInteger(0);
+    private static float cachedLargestDropdownWidth;
 
     @Override
     protected void configure(Configuration config) {
@@ -62,6 +69,29 @@ public class InstallationGUI extends Application {
         ImVec2 textDimensions = calcTextSize(currentTask.get());
         ImGui.setCursorPos((WINDOW_WIDTH - textDimensions.x) * 0.5f, WINDOW_HEIGHT * 0.65f);
         ImGui.text(currentTask.get());
+        if (renderDropdownSelection.get()) {
+            if (cachedLargestDropdownWidth == 0) {
+                float longest = 0;
+                for (String string : dropdownOptions.get()) {
+                    float length = calcTextSize(string).x;
+                    if (length > longest) {
+                        longest = length;
+                    }
+                }
+                cachedLargestDropdownWidth = longest + 30; // Add 30 for padding
+            }
+            ImGui.setCursorPos((WINDOW_WIDTH - cachedLargestDropdownWidth) * 0.5f, WINDOW_HEIGHT * 0.70f);
+            ImGui.setNextItemWidth(cachedLargestDropdownWidth);
+            ImGui.combo("##", index, dropdownOptions.get());
+            ImVec2 buttonDimensions = calcTextSize("Confirm");
+            ImGui.setCursorPos((WINDOW_WIDTH - buttonDimensions.x) * 0.5f, WINDOW_HEIGHT * 0.75f);
+            ImGui.button("Confirm");
+            if (ImGui.isItemClicked()) {
+                selectedIndex.set(index.get());
+                renderDropdownSelection.set(false);
+                cachedLargestDropdownWidth = 0;
+            }
+        }
         ImGui.end();
     }
 

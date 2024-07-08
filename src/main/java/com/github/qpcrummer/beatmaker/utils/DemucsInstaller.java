@@ -12,10 +12,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 public class DemucsInstaller {
-    private static final Path DEMUCS = Path.of("/demucs");
+    private static final Path DEMUCS = Path.of("demucs");
     public static void installDemucs() {
         Executors.newCachedThreadPool().submit(() -> {
             // Create folder
@@ -34,10 +38,10 @@ public class DemucsInstaller {
             HardwareAbstractionLayer hal = si.getHardware();
             OS operatingSystem = determineOS(os.getFamily());
 
-            DemucsVersion demucs = null;
+            DemucsVersion[] supportedVersions = new DemucsVersion[6];
             String gpuModel = null;
             if (operatingSystem == OS.UNKNOWN) {
-                demucs = DemucsVersion.NONE;
+                supportedVersions[0] = DemucsVersion.NONE;
             } else {
                 GPUVendor gpuVendor = null;
                 for (GraphicsCard card : hal.getGraphicsCards()) {
@@ -54,19 +58,51 @@ public class DemucsInstaller {
                 }
 
                 if (gpuVendor == null) {
-                    demucs = DemucsVersion.NONE;
+                    if (operatingSystem == OS.WINDOWS) {
+                        supportedVersions[0] = DemucsVersion.CPU_WINDOWS;
+                    } else {
+                        supportedVersions[0] = DemucsVersion.NONE;
+                    }
                 } else {
-                    demucs = determineCorrectDemucsVersion(gpuVendor, gpuModel, operatingSystem);
+                    supportedVersions[getVendorAIWeight(gpuVendor)] = determineCorrectDemucsVersion(gpuVendor, gpuModel, operatingSystem);
                 }
             }
+
+            organizeDemucsVersionArray(supportedVersions);
+            InstallationGUI.renderDropdownSelection.set(true);
+
             InstallationGUI.progress.set(5);
 
             // Ask the user if the version is correct
             InstallationGUI.currentTask.set("Waiting For Confirmation");
+
+            while (InstallationGUI.renderDropdownSelection.get()) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            InstallationGUI.currentTask.set("Downloading Demucs");
+            
         });
     }
     public static boolean needsInstallation() {
         return !Files.exists(DEMUCS);
+    }
+
+    private static void organizeDemucsVersionArray(DemucsVersion[] array) {
+        List<String> list = new ArrayList<>();
+        Collections.reverse(Arrays.asList(array));
+
+        for (DemucsVersion ver: array) {
+            if (ver != null) {
+                list.add(getDemucsDescription(ver));
+            }
+        }
+
+        InstallationGUI.dropdownOptions.set(list.toArray(new String[0]));
     }
 
     private enum GPUVendor {
@@ -110,7 +146,7 @@ public class DemucsInstaller {
     private static GPUVendor determineVendor(String vendor) {
         if (vendor.toLowerCase().contains("nvidia")) {
             return GPUVendor.NVIDIA;
-        } else if (vendor.toLowerCase().contains("amd")) {
+        } else if (vendor.toLowerCase().contains("advanced micro devices")) {
             return GPUVendor.AMD;
         } else if (vendor.toLowerCase().contains("intel")) {
             return GPUVendor.INTEL;
@@ -141,6 +177,32 @@ public class DemucsInstaller {
         MPS_MAC,
         CUDA_LINUX,
         NONE,
+    }
+
+    private static String getDemucsDescription(DemucsVersion version) {
+        switch (version) {
+            case CUDA_WINDOWS -> {
+                return "OS: Windows; Nvidia CUDA";
+            }
+            case CUDA_LINUX -> {
+                return "OS: Linux; AMD CUDA";
+            }
+            case MKL_WINDOWS -> {
+                return "OS: Windows; Intel MKL";
+            }
+            case MPS_MAC -> {
+                return "OS: MacOS; Apple Silicon MPS";
+            }
+            case CPU_WINDOWS -> {
+                return "OS: Windows; CPU";
+            }
+            case CPU_MAC -> {
+                return "OS: MacOS; Intel CPU";
+            }
+            default -> {
+                return "OS: Unknown; AI Disabled";
+            }
+        }
     }
 
     private static DemucsVersion determineCorrectDemucsVersion(GPUVendor vendor, String model, OS os) {

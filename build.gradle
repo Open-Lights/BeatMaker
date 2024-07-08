@@ -43,6 +43,8 @@ switch (OperatingSystem.current()) {
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.9.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.slf4j:slf4j-api:2.1.0-alpha1'
+    implementation 'org.slf4j:slf4j-jdk14:2.1.0-alpha1'
     implementation ('io.github.spair:imgui-java-app:1.86.11')
     implementation 'be.tarsos.dsp:core:2.5'
     implementation 'be.tarsos.dsp:jvm:2.5'
