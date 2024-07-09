@@ -55,6 +55,10 @@ public class InstallationGUI extends Application {
     @Override
     public void process() {
         renderInstallationScreen();
+
+        if (progress.get() == 100) {
+            this.dispose();
+        }
     }
 
     private void renderInstallationScreen() {

@@ -33,28 +33,26 @@ public class DemucsInstaller {
     private static final String PYTHON_URL_BASE = "https://www.python.org/ftp/python/3.8.10/python-3.8.10-";
     private static final String ARM_PYTHON_URL= "https://www.python.org/ftp/python/3.11.9/python-3.11.9-";
     private static SystemInformation info;
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static String cancellationError = "";
 
     public static void installDependencies() {
-        executor.submit(() -> {
+        new Thread(() -> {
             createFolders();
             gatherSystemData();
-            for (int i = 0; i < 3; i++) {
-                downloadPython();
-                if (verifyPythonInstallation()) {
+            for (int i = 0; true; i++) {
+                if (downloadPython() && verifyPythonInstallation()) {
                     break;
                 } else {
                     deleteDirectory(PYTHON.toFile());
                 }
+
                 if (i == 2) {
-                    System.out.println("TEST!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     cancelInstallation("Python");
-                    Thread.currentThread().interrupt();
+                    return;
                 }
             }
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; true; i++) {
                 installPip();
                 if (verifyPipInstallation()) {
                     break;
@@ -63,10 +61,12 @@ public class DemucsInstaller {
                 }
                 if (i == 2) {
                     cancelInstallation("Pip");
+                    return;
                 }
             }
+
             //createPythonVirtualEnvironment();
-        });
+        }).start();
     }
 
     private static void createFolders() {
@@ -83,14 +83,14 @@ public class DemucsInstaller {
         setProgress(3);
     }
 
-    private static void downloadPython() {
+    private static boolean downloadPython() {
         if (Files.notExists(PYTHON)) {
             setCurrentTask("Downloading Python");
             String[] url = getAppropriatePythonURL();
 
             if (url == null) {
                 cancellationError = "Python URL is considered null";
-                cancelInstallation("Python URL");
+                return false;
             } else {
                 Path path = Path.of(DEPENDENCIES + "/python-" + url[1]);
                 downloadFile(url[0] + url[1], path, 15);
@@ -101,12 +101,14 @@ public class DemucsInstaller {
         } else {
             setProgress(20);
         }
+        return true;
     }
 
     private static boolean verifyPythonInstallation() {
         setCurrentTask("Verifying Python Installation");
-        String command = "pythonw.exe -V";
-        ProcessBuilder builder = new ProcessBuilder(command).directory(PYTHON.toAbsolutePath().toFile());
+        String executable = "python";
+        String argument = "-V";
+        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
         try {
             Process process = builder.start();
 
@@ -137,7 +139,9 @@ public class DemucsInstaller {
 
         setCurrentTask("Downloading Pip Installer");
         Path output = Path.of(PYTHON + "/get-pip.py");
-        downloadFile("https://bootstrap.pypa.io/get-pip.py", output, 25);
+        if (Files.notExists(output)) {
+            downloadFile("https://bootstrap.pypa.io/get-pip.py", output, 25);
+        }
 
         setCurrentTask("Installing Pip");
         runPipInstaller();
@@ -145,42 +149,60 @@ public class DemucsInstaller {
     }
 
     private static void runPipInstaller() {
-        String command = "pythonw.exe get-pip.py";
-        ProcessBuilder builder = new ProcessBuilder(command).directory(PYTHON.toAbsolutePath().toFile());
+        String executable = "python";
+        String argument = "get-pip.py";
+        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
         try {
-            builder.start();
+            Process process = builder.start();
+
+            // Read the output of the process
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                Main.logger.warning("Failed to load Pip. Exit code: " + exitCode);
+            }
         } catch (IOException e) {
-            Main.logger.warning("Failed to install Pip");
+            Main.logger.warning("Error starting the process: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Main.logger.warning("Process interrupted: " + e.getMessage());
         }
     }
 
     private static void preparePythonFile() {
-        File file = Path.of(PYTHON + "/python38._pth").toFile();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file));
-             BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        File file = Path.of(PYTHON.toAbsolutePath() + "/python38._pth").toFile();
 
-            StringBuilder content = new StringBuilder();
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            int lineNumber = 1;
             while ((line = reader.readLine()) != null) {
+                if (lineNumber == 5 && line.startsWith("#")) {
+                    line = line.substring(1); // Remove the first character if it is '#'
+                }
                 content.append(line).append(System.lineSeparator());
+                lineNumber++;
             }
-
-            // Modify the content (remove the last '#' and space)
-            int lastIndex = content.lastIndexOf("#");
-            if (lastIndex != -1) {
-                content.delete(lastIndex, content.length());
-            }
-
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(content.toString());
         } catch (IOException e) {
-            Main.logger.warning("Failed to edit python38._pth");
+            throw new RuntimeException(e);
         }
     }
 
     private static boolean verifyPipInstallation() {
         setCurrentTask("Verifying Pip Installation");
-        String command = "pip.exe -V";
-        ProcessBuilder builder = new ProcessBuilder(command).directory(PIP.toAbsolutePath().toFile());
+        String executable = "pip";
+        String argument = "-V";
+        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PIP.toAbsolutePath().toFile());
         try {
             Process process = builder.start();
 
@@ -346,7 +368,12 @@ public class DemucsInstaller {
     private static void cancelInstallation(String reason) {
         setCurrentTask("Canceled Installation Due To " + reason);
         Main.logger.warning(cancellationError);
-        executor.shutdownNow();
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        setProgress(100);
     }
 
     /*
