@@ -46,7 +46,7 @@ public class InstallationGUI extends Application {
     @Override
     protected void preRun() {
         super.preRun();
-        DemucsInstaller.installDemucs();
+        DemucsInstaller.installDependencies();
         glfwSetWindowAttrib(this.getHandle(), GLFW_RESIZABLE, 0);
         BACKGROUND_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "installation_background.png"));
         LOADING_BAR_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "loading_bar.png"));
