@@ -65,7 +65,7 @@ public class DemucsInstaller {
                 }
             }
 
-            //createPythonVirtualEnvironment();
+            installDemucs();
         }).start();
     }
 
@@ -106,9 +106,7 @@ public class DemucsInstaller {
 
     private static boolean verifyPythonInstallation() {
         setCurrentTask("Verifying Python Installation");
-        String executable = "python";
-        String argument = "-V";
-        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
+        ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "python.exe", "-V").directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
         try {
             Process process = builder.start();
 
@@ -149,9 +147,7 @@ public class DemucsInstaller {
     }
 
     private static void runPipInstaller() {
-        String executable = "python";
-        String argument = "get-pip.py";
-        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
+        ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "python.exe", "get-pip.py").directory(PYTHON.toAbsolutePath().toFile()).redirectErrorStream(true);
         try {
             Process process = builder.start();
 
@@ -200,9 +196,7 @@ public class DemucsInstaller {
 
     private static boolean verifyPipInstallation() {
         setCurrentTask("Verifying Pip Installation");
-        String executable = "pip";
-        String argument = "-V";
-        ProcessBuilder builder = new ProcessBuilder(executable, argument).directory(PIP.toAbsolutePath().toFile());
+        ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "pip.exe", "-V").directory(PIP.toAbsolutePath().toFile());
         try {
             Process process = builder.start();
 
@@ -210,7 +204,7 @@ public class DemucsInstaller {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+                Main.logger.info(line + " has loaded properly");
             }
 
             int exitCode = process.waitFor();
@@ -223,6 +217,35 @@ public class DemucsInstaller {
             Main.logger.warning("Failed to load Pip");
         }
         return true;
+    }
+
+    private static void installDemucs() {
+        installPackageWithPip("demucs");
+    }
+
+    private static void installPackageWithPip(String pkg) {
+        setCurrentTask("Installing Package: " + pkg);
+        ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "pip.exe", "install", pkg).directory(PIP.toAbsolutePath().toFile());
+        try {
+            Process process = builder.start();
+
+            // Read the output of the process
+            // TODO Track progress
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                Main.logger.warning("Failed to install " + pkg);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            cancellationError = e.toString();
+            Main.logger.warning("Failed to install " + pkg);
+        }
     }
 
     private static void createPythonVirtualEnvironment() {
