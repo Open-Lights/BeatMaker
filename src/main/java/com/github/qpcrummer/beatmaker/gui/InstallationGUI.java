@@ -57,6 +57,7 @@ public class InstallationGUI extends Application {
         renderInstallationScreen();
 
         if (progress.get() == 100) {
+            launch(new Main());
             this.dispose();
         }
     }

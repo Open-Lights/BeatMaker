@@ -5,10 +5,6 @@ import com.github.qpcrummer.beatmaker.gui.InstallationGUI;
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import org.lwjgl.system.Platform;
-import oshi.SystemInfo;
-import oshi.hardware.GraphicsCard;
-import oshi.hardware.HardwareAbstractionLayer;
-import oshi.software.os.OperatingSystem;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -16,19 +12,11 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class DemucsInstaller {
     private static final Path DEPENDENCIES = Path.of("openlights/dependencies");
     private static final Path DEMUCS = Path.of("openlights/dependencies/demucs");
     private static final Path PYTHON = Path.of("openlights/dependencies/python");
-    private static final Path VENV = Path.of("openlights/python-env");
     private static final Path PIP = Path.of("openlights/dependencies/python/Scripts");
     private static final String PYTHON_URL_BASE = "https://www.python.org/ftp/python/3.8.10/python-3.8.10-";
     private static final String ARM_PYTHON_URL= "https://www.python.org/ftp/python/3.11.9/python-3.11.9-";
@@ -66,13 +54,13 @@ public class DemucsInstaller {
             }
 
             installDemucs();
+            finishUp();
         }).start();
     }
 
     private static void createFolders() {
         createFolder(DEPENDENCIES, "Creating Dependencies Folder");
         createFolder(DEMUCS, "Creating Demucs Folder");
-        createFolder(VENV, "Creating Python Virtual Environment Folder");
 
         setProgress(1);
     }
@@ -220,21 +208,47 @@ public class DemucsInstaller {
     }
 
     private static void installDemucs() {
-        installPackageWithPip("demucs");
+        installPackageWithPip("demucs", 30, 55, 11, 90);
     }
 
-    private static void installPackageWithPip(String pkg) {
+    private static void installPackageWithPip(String pkg, int packagesCollected, int packagesDownloaded, int packagesBuilt, int finalGoal) {
         setCurrentTask("Installing Package: " + pkg);
         ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "pip.exe", "install", pkg).directory(PIP.toAbsolutePath().toFile());
+        int currentGap = finalGoal - InstallationGUI.progress.get();
+        int preGoal = Math.round(finalGoal - (currentGap * 0.5f));
+        int denominator = packagesBuilt + packagesDownloaded;
         try {
             Process process = builder.start();
 
-            // Read the output of the process
-            // TODO Track progress
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
+            boolean cached = false;
+            int progressCounter = 0;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
+                if (line.contains("Using cached")) {
+                    cached = true;
+                }
+
+                if (cached) {
+                    if (line.contains("Collecting")) {
+                        progressCounter++;
+                    }
+                    relayDownloadProgress(preGoal, (float) progressCounter / packagesCollected);
+                } else {
+                    if (line.contains("Downloading")) {
+                        progressCounter++;
+                    } else if (line.contains("Building")) {
+                        progressCounter++;
+                    }
+                    relayDownloadProgress(preGoal, (float) progressCounter / denominator);
+                }
+
+                if (line.contains("Installing collected packages")) {
+                    relayDownloadProgress(finalGoal, 0.5f);
+                } else if (line.contains("Successfully installed")) {
+                    relayDownloadProgress(finalGoal, 1.0f);
+                }
             }
 
             int exitCode = process.waitFor();
@@ -248,14 +262,12 @@ public class DemucsInstaller {
         }
     }
 
-    private static void createPythonVirtualEnvironment() {
-        setCurrentTask("Creating Python Virtual Environment");
-        String pythonPath = PYTHON + "/pythonw.exe";
-        String createEnvCommand = pythonPath + " -m venv " + VENV.toAbsolutePath();
-        ProcessBuilder builder = new ProcessBuilder().command(createEnvCommand);
+    private static void finishUp() {
+        setCurrentTask("Preparing Open Lights Beat Editor");
+        setProgress(100);
         try {
-            Process process = builder.start();
-        } catch (IOException e) {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -326,6 +338,10 @@ public class DemucsInstaller {
         }
         int newProgress = Math.round(goal - (gap * (1 - currentProgress)));
         InstallationGUI.progress.set(Math.max(newProgress, pastProgress));
+
+        if (newProgress == goal) {
+            gap = 0;
+        }
     }
 
     private static void downloadFile(String fileUrl, Path destination, int progressGoal) {
@@ -399,192 +415,13 @@ public class DemucsInstaller {
         setProgress(100);
     }
 
-    /*
-    public static void installDemucs() {
-        Executors.newCachedThreadPool().submit(() -> {
-            // Create folder
-            InstallationGUI.currentTask.set("Creating Folder");
-            try {
-                Files.createDirectory(DEMUCS);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            InstallationGUI.progress.set(1);
-
-            // Gathering Data
-            InstallationGUI.currentTask.set("Gathering System Data");
-            SystemInfo si = new SystemInfo();
-            OperatingSystem os = si.getOperatingSystem();
-            HardwareAbstractionLayer hal = si.getHardware();
-            OS operatingSystem = determineOS(os.getFamily());
-
-            DemucsVersion[] supportedVersions = new DemucsVersion[6];
-            String gpuModel = null;
-            if (operatingSystem == OS.UNKNOWN) {
-                supportedVersions[0] = DemucsVersion.NONE;
-            } else {
-                GPUVendor gpuVendor = null;
-                for (GraphicsCard card : hal.getGraphicsCards()) {
-                    GPUVendor vendor = determineVendor(card.getVendor());
-                    if (gpuVendor == null) {
-                        gpuModel = card.getName();
-                        gpuVendor = vendor;
-                    } else {
-                        if (getVendorAIWeight(vendor) > getVendorAIWeight(gpuVendor)) {
-                            gpuVendor = vendor;
-                            gpuModel = card.getName();
-                        }
-                    }
-                }
-
-                if (gpuVendor == null) {
-                    if (operatingSystem == OS.WINDOWS) {
-                        supportedVersions[0] = DemucsVersion.CPU_WINDOWS;
-                    } else {
-                        supportedVersions[0] = DemucsVersion.NONE;
-                    }
-                } else {
-                    supportedVersions[getVendorAIWeight(gpuVendor)] = determineCorrectDemucsVersion(gpuVendor, gpuModel, operatingSystem);
-                }
-            }
-
-            organizeDemucsVersionArray(supportedVersions);
-            InstallationGUI.renderDropdownSelection.set(true);
-
-            InstallationGUI.progress.set(5);
-
-            // Ask the user if the version is correct
-            InstallationGUI.currentTask.set("Waiting For Confirmation");
-
-            while (InstallationGUI.renderDropdownSelection.get()) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            InstallationGUI.currentTask.set("Downloading Demucs");
-            
-        });
-    }
-
-     */
     public static boolean needsInstallation() {
-        return !Files.exists(DEMUCS);
+        return Files.notExists(DEMUCS) ||
+                Files.notExists(DEPENDENCIES) ||
+                Files.notExists(PYTHON) ||
+                Files.notExists(PIP) ||
+                Files.notExists(Path.of(PYTHON + "/python.exe")) ||
+                Files.notExists(Path.of(PIP + "/pip.exe")) ||
+                Files.notExists(Path.of(PYTHON + "/Lib/site-packages/demucs"));
     }
-
-    /*
-    private static void organizeDemucsVersionArray(DemucsVersion[] array) {
-        List<String> list = new ArrayList<>();
-        Collections.reverse(Arrays.asList(array));
-
-        for (DemucsVersion ver: array) {
-            if (ver != null) {
-                list.add(getDemucsDescription(ver));
-            }
-        }
-
-        InstallationGUI.dropdownOptions.set(list.toArray(new String[0]));
-    }
-
-    private enum DemucsVersion {
-        CUDA_WINDOWS,
-        CPU_WINDOWS,
-        MKL_WINDOWS,
-        CPU_MAC,
-        MPS_MAC,
-        CUDA_LINUX,
-        NONE,
-    }
-
-    private static String getDemucsDescription(DemucsVersion version) {
-        switch (version) {
-            case CUDA_WINDOWS -> {
-                return "OS: Windows; Nvidia CUDA";
-            }
-            case CUDA_LINUX -> {
-                return "OS: Linux; AMD CUDA";
-            }
-            case MKL_WINDOWS -> {
-                return "OS: Windows; Intel MKL";
-            }
-            case MPS_MAC -> {
-                return "OS: MacOS; Apple Silicon MPS";
-            }
-            case CPU_WINDOWS -> {
-                return "OS: Windows; CPU";
-            }
-            case CPU_MAC -> {
-                return "OS: MacOS; Intel CPU";
-            }
-            default -> {
-                return "OS: Unknown; AI Disabled";
-            }
-        }
-    }
-
-    private static DemucsVersion determineCorrectDemucsVersion(GPUVendor vendor, String model, OS os) {
-        if (vendor == GPUVendor.NVIDIA) {
-            if (os == OS.WINDOWS) {
-                if (checkCudaSupport()) {
-                    return DemucsVersion.CUDA_WINDOWS;
-                } else {
-                    return DemucsVersion.CPU_WINDOWS;
-                }
-            } else if (os == OS.MACOS) {
-                return DemucsVersion.CPU_MAC;
-            } else {
-                return DemucsVersion.NONE;
-            }
-        } else if (vendor == GPUVendor.INTEL) {
-            if (os == OS.WINDOWS) {
-                if (checkIntelAISupport(model)) {
-                    return DemucsVersion.MKL_WINDOWS;
-                } else {
-                    return DemucsVersion.CPU_WINDOWS;
-                }
-            } else if (os == OS.MACOS){
-                return DemucsVersion.CPU_MAC;
-            } else {
-                return DemucsVersion.NONE;
-            }
-        } else if (vendor == GPUVendor.AMD) {
-            if (os == OS.WINDOWS) {
-                return DemucsVersion.CPU_WINDOWS;
-            } else if (os == OS.LINUX) {
-                // TODO Test for CUDA/ROCm support
-                return DemucsVersion.CUDA_LINUX;
-            } else {
-                return DemucsVersion.CPU_MAC;
-            }
-        } else if (vendor == GPUVendor.APPLE) {
-            return DemucsVersion.MPS_MAC;
-        } else {
-            return DemucsVersion.NONE;
-        }
-    }
-
-    private static boolean checkCudaSupport() {
-        try {
-            ProcessBuilder builder = new ProcessBuilder().command("nvidia-smi");
-            Process process = builder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("CUDA Version")) {
-                    return true;
-                }
-            }
-        } catch (Exception e) {
-            Main.logger.warning("Failed to find NVIDA software");
-        }
-        return false;
-    }
-
-    private static boolean checkIntelAISupport(String model) {
-        return model.toLowerCase().contains("arc") || model.toLowerCase().contains("xe");
-    }
-
-     */
 }

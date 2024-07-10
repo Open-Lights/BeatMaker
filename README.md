@@ -2,6 +2,7 @@
 Creates and edits beat files for ChristmasJukebox.
 A continuation of BeatFileEditor.
 
+---
 
 ## About
 The BeatFileEditor for ChristmasJukebox allows editing beats based on the inputted song.
@@ -13,11 +14,37 @@ Some features include:
 - Simple User Interface: Edit a beat interval just by typing
 - Loading charts: Ability to load charts from beat files
 
+---
+
 ## Performance
-This software was oriented to be used on low end hardware. The maximum ram consumption should be around 300MB or less.
+This software was oriented to be used on low-end hardware. The maximum ram consumption should be around 300MB or less.
 This software can be CPU-heavy at times, but these instances are infrequent.
+If installed with Demucs, this software can be very demanding. Read the requirements below to see if your PC qualifies.
+
+---
+
+## Requirements
+### Just Open Lights Beat Maker
+- Storage: 200MB
+- Memory: 500MB
+- Operating System: Any
+### Open Lights Beat Maker with Demucs AI
+- Storage: 1.2GB
+- Memory: 8GB
+- GPU: Preferably one that supports CUDA (Nvidia GTX / RTX), but it isn't required
+- Operating System: Windows 10/11
+
+---
 
 ## File Output
-`1000` - Single beat (Ex: 1000 microseconds)
-
-`[1000, 2000]` - Held beat (Ex: 1000 microseconds to 2000 microseconds)
+This json file will appear named after your song in `openlights/saves/song_name.json`
+```json
+{
+  "0, 1": {      # Channels 0 and 1
+    "1040": 1,   # Light On at 1040 milliseconds
+    "2000": 0,   # Light Off at 2000 milliseconds
+    "2970": 1,
+    "3930": 0
+  }
+}
+```
