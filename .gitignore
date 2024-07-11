@@ -28,3 +28,4 @@ gradle-app.setting
 /Test Audio
 *.ini
 .codiumai
+/openlights

@@ -54,6 +54,7 @@ public class DemucsInstaller {
             }
 
             installDemucs();
+            Config.demucsInstalled = true;
             finishUp();
         }).start();
     }
@@ -264,12 +265,13 @@ public class DemucsInstaller {
 
     private static void finishUp() {
         setCurrentTask("Preparing Open Lights Beat Editor");
-        setProgress(100);
+        Config.installationShown = true;
         try {
             Thread.sleep(4000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        setProgress(100);
     }
 
     private static void createFolder(Path path, String taskName) {
@@ -416,12 +418,14 @@ public class DemucsInstaller {
     }
 
     public static boolean needsInstallation() {
-        return Files.notExists(DEMUCS) ||
-                Files.notExists(DEPENDENCIES) ||
-                Files.notExists(PYTHON) ||
-                Files.notExists(PIP) ||
-                Files.notExists(Path.of(PYTHON + "/python.exe")) ||
-                Files.notExists(Path.of(PIP + "/pip.exe")) ||
-                Files.notExists(Path.of(PYTHON + "/Lib/site-packages/demucs"));
+        return Config.demucsInstalled && (
+                Files.notExists(DEMUCS) ||
+                        Files.notExists(DEPENDENCIES) ||
+                        Files.notExists(PYTHON) ||
+                        Files.notExists(PIP) ||
+                        Files.notExists(Path.of(PYTHON + "/python.exe")) ||
+                        Files.notExists(Path.of(PIP + "/pip.exe")) ||
+                        Files.notExists(Path.of(PYTHON + "/Lib/site-packages/demucs"))
+                );
     }
 }

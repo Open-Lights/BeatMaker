@@ -4,6 +4,7 @@ import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.gui.*;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.github.qpcrummer.beatmaker.utils.DemucsInstaller;
 import imgui.app.Application;
 import imgui.app.Configuration;
@@ -21,7 +22,8 @@ public class Main extends Application {
     public static final Logger logger = Logger.getLogger("Christmas Celebrator Beat Editor");
 
     public static void main(String[] args) {
-        if (DemucsInstaller.needsInstallation()) {
+        Config.loadConfig();
+        if (!Config.installationShown || DemucsInstaller.needsInstallation()) {
             launch(new InstallationGUI());
         } else {
             launch(new Main());
