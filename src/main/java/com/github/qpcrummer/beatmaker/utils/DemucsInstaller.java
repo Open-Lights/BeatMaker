@@ -23,38 +23,40 @@ public class DemucsInstaller {
     private static SystemInformation info;
     private static String cancellationError = "";
 
-    public static void installDependencies() {
+    public static void installDependencies(boolean installingDemucs) {
         new Thread(() -> {
-            createFolders();
-            gatherSystemData();
-            for (int i = 0; true; i++) {
-                if (downloadPython() && verifyPythonInstallation()) {
-                    break;
-                } else {
-                    deleteDirectory(PYTHON.toFile());
+            if (installingDemucs) {
+                createFolders();
+                gatherSystemData();
+                for (int i = 0; true; i++) {
+                    if (downloadPython() && verifyPythonInstallation()) {
+                        break;
+                    } else {
+                        deleteDirectory(PYTHON.toFile());
+                    }
+
+                    if (i == 2) {
+                        cancelInstallation("Python");
+                        return;
+                    }
                 }
 
-                if (i == 2) {
-                    cancelInstallation("Python");
-                    return;
+                for (int i = 0; true; i++) {
+                    installPip();
+                    if (verifyPipInstallation()) {
+                        break;
+                    } else {
+                        deleteDirectory(PIP.toFile());
+                    }
+                    if (i == 2) {
+                        cancelInstallation("Pip");
+                        return;
+                    }
                 }
+
+                installDemucs();
+                Config.demucsInstalled = true;
             }
-
-            for (int i = 0; true; i++) {
-                installPip();
-                if (verifyPipInstallation()) {
-                    break;
-                } else {
-                    deleteDirectory(PIP.toFile());
-                }
-                if (i == 2) {
-                    cancelInstallation("Pip");
-                    return;
-                }
-            }
-
-            installDemucs();
-            Config.demucsInstalled = true;
             finishUp();
         }).start();
     }
@@ -266,6 +268,7 @@ public class DemucsInstaller {
     private static void finishUp() {
         setCurrentTask("Preparing Open Lights Beat Editor");
         Config.installationShown = true;
+        Config.saveConfig();
         try {
             Thread.sleep(4000);
         } catch (InterruptedException e) {
@@ -418,6 +421,10 @@ public class DemucsInstaller {
     }
 
     public static boolean needsInstallation() {
+        if (!Config.installationShown) {
+            return true;
+        }
+
         return Config.demucsInstalled && (
                 Files.notExists(DEMUCS) ||
                         Files.notExists(DEPENDENCIES) ||

@@ -23,7 +23,7 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         Config.loadConfig();
-        if (!Config.installationShown || DemucsInstaller.needsInstallation()) {
+        if (DemucsInstaller.needsInstallation()) {
             launch(new InstallationGUI());
         } else {
             launch(new Main());

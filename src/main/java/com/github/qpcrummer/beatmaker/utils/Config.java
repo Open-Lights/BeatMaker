@@ -1,5 +1,7 @@
 package com.github.qpcrummer.beatmaker.utils;
 
+import com.github.qpcrummer.beatmaker.Main;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -25,11 +27,12 @@ public final class Config {
     public static void saveConfig(){
         try (OutputStream output = Files.newOutputStream(CONFIG, StandardOpenOption.CREATE)) {
             fillDefaults();
+            getValues();
+            Main.logger.info("Saving Config");
             properties.store(output, null);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        parse();
     }
 
     /**
@@ -60,6 +63,7 @@ public final class Config {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        parse();
     }
 
     /**
@@ -69,5 +73,10 @@ public final class Config {
         fillDefaults();
         demucsInstalled = Boolean.parseBoolean(properties.getProperty(DEMUCS_KEY));
         installationShown = Boolean.parseBoolean(properties.getProperty(INSTALLATION_SHOWN_KEY));
+    }
+
+    private static void getValues() {
+        properties.setProperty(DEMUCS_KEY, String.valueOf(demucsInstalled));
+        properties.setProperty(INSTALLATION_SHOWN_KEY, String.valueOf(installationShown));
     }
 }

@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.Main;
 import com.github.qpcrummer.beatmaker.utils.DemucsInstaller;
+import com.github.qpcrummer.beatmaker.utils.GUIUtils;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.app.Application;
@@ -28,13 +29,14 @@ public class InstallationGUI extends Application {
     private static final int WINDOW_HEIGHT = 600;
     private int[] BACKGROUND_TEXTURE;
     private int[] LOADING_BAR_TEXTURE;
-    public static AtomicInteger progress = new AtomicInteger(100);
-    public static AtomicReference<String> currentTask = new AtomicReference<>("Loading...");
+    public static AtomicInteger progress = new AtomicInteger(0);
+    public static AtomicReference<String> currentTask = new AtomicReference<>("Please Select Your Installation Method");
     public static AtomicBoolean renderDropdownSelection = new AtomicBoolean(false);
     public static AtomicReference<String[]> dropdownOptions = new AtomicReference<>();
     ImInt index = new ImInt(0);
     public static AtomicInteger selectedIndex = new AtomicInteger(0);
     private static float cachedLargestDropdownWidth;
+    private boolean installingDemucs;
 
     @Override
     protected void configure(Configuration config) {
@@ -46,7 +48,6 @@ public class InstallationGUI extends Application {
     @Override
     protected void preRun() {
         super.preRun();
-        DemucsInstaller.installDependencies();
         glfwSetWindowAttrib(this.getHandle(), GLFW_RESIZABLE, 0);
         BACKGROUND_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "installation_background.png"));
         LOADING_BAR_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "loading_bar.png"));
@@ -76,31 +77,52 @@ public class InstallationGUI extends Application {
         ImGui.image(BACKGROUND_TEXTURE[0], BACKGROUND_TEXTURE[1], BACKGROUND_TEXTURE[2]);
         ImGui.setCursorPos(0, 0);
         ImGui.image(LOADING_BAR_TEXTURE[0], LOADING_BAR_TEXTURE[1] * (progress.get() / 100f), LOADING_BAR_TEXTURE[2]);
-        ImVec2 textDimensions = calcTextSize(currentTask.get());
+        GUIUtils.setFont(1.5f);
+        ImVec2 textDimensions = GUIUtils.calcTextSize(currentTask.get());
         ImGui.setCursorPos((WINDOW_WIDTH - textDimensions.x) * 0.5f, WINDOW_HEIGHT * 0.65f);
         ImGui.text(currentTask.get());
-        if (renderDropdownSelection.get()) {
-            if (cachedLargestDropdownWidth == 0) {
-                float longest = 0;
-                for (String string : dropdownOptions.get()) {
-                    float length = calcTextSize(string).x;
-                    if (length > longest) {
-                        longest = length;
+        GUIUtils.clearFontSize();
+        if (installingDemucs) {
+            if (renderDropdownSelection.get()) {
+                if (cachedLargestDropdownWidth == 0) {
+                    float longest = 0;
+                    for (String string : dropdownOptions.get()) {
+                        float length = GUIUtils.calcTextSize(string).x;
+                        if (length > longest) {
+                            longest = length;
+                        }
                     }
+                    cachedLargestDropdownWidth = longest + 30; // Add 30 for padding
                 }
-                cachedLargestDropdownWidth = longest + 30; // Add 30 for padding
+                ImGui.setCursorPos((WINDOW_WIDTH - cachedLargestDropdownWidth) * 0.5f, WINDOW_HEIGHT * 0.70f);
+                ImGui.setNextItemWidth(cachedLargestDropdownWidth);
+                ImGui.combo("##", index, dropdownOptions.get());
+                ImVec2 buttonDimensions = GUIUtils.calcTextSize("Confirm");
+                ImGui.setCursorPos((WINDOW_WIDTH - buttonDimensions.x) * 0.5f, WINDOW_HEIGHT * 0.75f);
+                ImGui.button("Confirm");
+                if (ImGui.isItemClicked()) {
+                    selectedIndex.set(index.get());
+                    renderDropdownSelection.set(false);
+                    cachedLargestDropdownWidth = 0;
+                }
             }
-            ImGui.setCursorPos((WINDOW_WIDTH - cachedLargestDropdownWidth) * 0.5f, WINDOW_HEIGHT * 0.70f);
-            ImGui.setNextItemWidth(cachedLargestDropdownWidth);
-            ImGui.combo("##", index, dropdownOptions.get());
-            ImVec2 buttonDimensions = calcTextSize("Confirm");
-            ImGui.setCursorPos((WINDOW_WIDTH - buttonDimensions.x) * 0.5f, WINDOW_HEIGHT * 0.75f);
-            ImGui.button("Confirm");
+        } else {
+            GUIUtils.setFont(1.5f);
+            ImVec2 installTextWidth = GUIUtils.calcTextSize("Install Demucs AI");
+            ImGui.setCursorPos((WINDOW_WIDTH - installTextWidth.x) * 0.5f, WINDOW_HEIGHT * 0.70f);
+            ImGui.button("Install Demucs AI");
             if (ImGui.isItemClicked()) {
-                selectedIndex.set(index.get());
-                renderDropdownSelection.set(false);
-                cachedLargestDropdownWidth = 0;
+                installingDemucs = true;
+                DemucsInstaller.installDependencies(true);
             }
+            ImVec2 skipTextWidth = GUIUtils.calcTextSize("Skip Demucs AI");
+            ImGui.setCursorPos((WINDOW_WIDTH - skipTextWidth.x) * 0.5f, WINDOW_HEIGHT * 0.77f);
+            ImGui.button("Skip Demucs AI");
+            if (ImGui.isItemClicked()) {
+                installingDemucs = true; // Not actually though
+                DemucsInstaller.installDependencies(false);
+            }
+            GUIUtils.clearFontSize();
         }
         ImGui.end();
     }
@@ -128,11 +150,5 @@ public class InstallationGUI extends Application {
         stbi_image_free(imageData);
 
         return new int[] {imageTexture, imageWidth[0], imageHeight[0]};
-    }
-
-    private ImVec2 calcTextSize(String text) {
-        ImVec2 value = new ImVec2();
-        ImGui.calcTextSize(value, text);
-        return value;
     }
 }
