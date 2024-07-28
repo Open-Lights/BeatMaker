@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.Main;
+import com.github.qpcrummer.beatmaker.audio.StemmedAudio;
 import imgui.ImGui;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTreeNodeFlags;
@@ -99,7 +100,7 @@ public class FileExplorer {
                         reset();
                     } else if (!beatFileMode && fileExtension.equals("wav")) {
                         Main.logger.info("Uploading wav file: " + path);
-                        MusicPlayer.currentSong = path;
+                        MusicPlayer.currentAudio = new StemmedAudio(path);
                         MusicPlayer.loadSong();
                         reset();
                     } else {

@@ -15,11 +15,15 @@ public final class Config {
     final static String
             CONFIG_VERSION_KEY = "config-version",
             INSTALLATION_SHOWN_KEY = "installation_shown",
-            DEMUCS_KEY = "demucs-installed";
+            DEMUCS_KEY = "demucs-installed",
+            CHANNELS_KEY = "channels",
+            MIN_BEAT_LENGTH = "min-beat-length-sec";
 
     public static final Properties properties = new Properties();
     public static final String cfgver = "1.0";
     public static boolean demucsInstalled, installationShown;
+    public static int channels;
+    public static double minBeatLength;
 
     /**
      * Save the config
@@ -42,6 +46,8 @@ public final class Config {
         checkProperty(CONFIG_VERSION_KEY, cfgver);
         checkProperty(INSTALLATION_SHOWN_KEY, "false");
         checkProperty(DEMUCS_KEY, "false");
+        checkProperty(CHANNELS_KEY, "16");
+        checkProperty(MIN_BEAT_LENGTH, "0.2");
     }
 
     private static void checkProperty(String key, String defaultValue) {
@@ -73,10 +79,14 @@ public final class Config {
         fillDefaults();
         demucsInstalled = Boolean.parseBoolean(properties.getProperty(DEMUCS_KEY));
         installationShown = Boolean.parseBoolean(properties.getProperty(INSTALLATION_SHOWN_KEY));
+        channels = Integer.parseInt(properties.getProperty(CHANNELS_KEY));
+        minBeatLength = Double.parseDouble(properties.getProperty(MIN_BEAT_LENGTH));
     }
 
     private static void getValues() {
         properties.setProperty(DEMUCS_KEY, String.valueOf(demucsInstalled));
         properties.setProperty(INSTALLATION_SHOWN_KEY, String.valueOf(installationShown));
+        properties.setProperty(CHANNELS_KEY, String.valueOf(channels));
+        properties.setProperty(MIN_BEAT_LENGTH, String.valueOf(minBeatLength));
     }
 }

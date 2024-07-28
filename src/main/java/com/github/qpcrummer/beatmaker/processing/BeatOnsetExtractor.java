@@ -8,16 +8,21 @@ import be.tarsos.dsp.onsets.OnsetHandler;
 import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import imgui.type.ImDouble;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class BeatOnsetExtractor implements OnsetHandler {
     public final List<ImDouble[]> beats = new ArrayList<>();
     public List<ImDouble[]> run() {
+        return run(MusicPlayer.currentAudio.fullAudioPath);
+    }
+
+    public List<ImDouble[]> run(Path path) {
         int size = 512;
         int overlap = 256;
         int sampleRate = 16000;
-        AudioDispatcher dispatcher = AudioDispatcherFactory.fromPipe(MusicPlayer.currentSong.toFile().getAbsolutePath(), sampleRate, size, overlap);
+        AudioDispatcher dispatcher = AudioDispatcherFactory.fromPipe(path.toFile().getAbsolutePath(), sampleRate, size, overlap);
 
         ComplexOnsetDetector detector = new ComplexOnsetDetector(size);
         BeatRootOnsetEventHandler handler = new BeatRootOnsetEventHandler();

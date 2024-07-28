@@ -15,9 +15,10 @@ import java.nio.file.Path;
 
 public class DemucsInstaller {
     private static final Path DEPENDENCIES = Path.of("openlights/dependencies");
-    private static final Path DEMUCS = Path.of("openlights/dependencies/demucs");
-    private static final Path PYTHON = Path.of("openlights/dependencies/python");
+    public static final Path DEMUCS = Path.of("openlights/dependencies/demucs");
+    public static final Path PYTHON = Path.of("openlights/dependencies/python");
     private static final Path PIP = Path.of("openlights/dependencies/python/Scripts");
+    private static final Path FFMPEG = Path.of("openlights/dependencies/python/ffmpeg/");
     private static final String PYTHON_URL_BASE = "https://www.python.org/ftp/python/3.8.10/python-3.8.10-";
     private static final String ARM_PYTHON_URL= "https://www.python.org/ftp/python/3.11.9/python-3.11.9-";
     private static SystemInformation info;
@@ -54,6 +55,8 @@ public class DemucsInstaller {
                     }
                 }
 
+                downloadFFMPEG();
+                installPySoundFile();
                 installDemucs();
                 Config.demucsInstalled = true;
             }
@@ -208,6 +211,39 @@ public class DemucsInstaller {
             Main.logger.warning("Failed to load Pip");
         }
         return true;
+    }
+
+    private static void downloadFFMPEG() {
+        setCurrentTask("Downloading FFMPEG");
+        Path output = Path.of(PYTHON + "/ffmpeg.zip");
+        downloadFile("https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip", output, 33);
+        setCurrentTask("Installing FFMPEG");
+        extractFile(output, PYTHON, 35);
+        for (File file : PYTHON.toFile().listFiles()) {
+            if (file.getName().contains("ffmpeg")) {
+                File renamed = FFMPEG.toFile();
+                file.renameTo(renamed);
+                try {
+                    if (Files.notExists(Path.of(PYTHON + "/ffmpeg.exe"))) {
+                        Files.move(Path.of(renamed.getAbsolutePath() + "/bin/ffmpeg.exe"), Path.of(PYTHON + "/ffmpeg.exe"));
+                    }
+                    if (Files.notExists(Path.of(PYTHON + "/ffplay.exe"))) {
+                        Files.move(Path.of(renamed.getAbsolutePath() + "/bin/ffplay.exe"), Path.of(PYTHON + "/ffplay.exe"));
+                    }
+                    if (Files.notExists(Path.of(PYTHON + "/ffprobe.exe"))) {
+                        Files.move(Path.of(renamed.getAbsolutePath() + "/bin/ffprobe.exe"), Path.of(PYTHON + "/ffprobe.exe"));
+                    }
+                    deleteDirectory(renamed);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                break;
+            }
+        }
+    }
+
+    private static void installPySoundFile() {
+        installPackageWithPip("PySoundFile", 3, 6, 0, 45);
     }
 
     private static void installDemucs() {

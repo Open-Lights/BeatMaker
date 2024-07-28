@@ -1,6 +1,5 @@
 package com.github.qpcrummer.beatmaker;
 
-import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.gui.*;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
@@ -36,7 +35,6 @@ public class Main extends Application {
         logger.info("Loading Christmas Celebrator Song Editor");
         Data.initialize();
         BeatManager.initialize();
-        MusicPlayer.initialize();
 
         Path saveDir = Path.of("saves/");
         if (Files.notExists(saveDir)) {
@@ -55,6 +53,7 @@ public class Main extends Application {
         BeatGuideInteractionGUI.render();
         FileExplorer.render();
         Recorder.render();
+        DemucsGUI.render();
         BeatGenerationGUI.render();
     }
 

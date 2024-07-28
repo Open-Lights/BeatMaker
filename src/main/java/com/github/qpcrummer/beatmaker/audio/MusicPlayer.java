@@ -7,35 +7,20 @@ import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class MusicPlayer {
-    public static Path currentSong;
+    //public static Path currentSong;
+    // TODO Support playing only stems
+    public static StemmedAudio currentAudio;
     private static Clip clip;
     public static boolean playing;
     private static long position;
-    private static long cachedEndingIntervalPosition = -1;
-    private static final ScheduledExecutorService intervalChecker = Executors.newSingleThreadScheduledExecutor();
 
-    public static void initialize() {
-        intervalChecker.scheduleAtFixedRate(() -> {
-            if (playing && Data.doIntervals) {
-                if (cachedEndingIntervalPosition == -1) {
-                    cachedEndingIntervalPosition = BeatFile.secondsToMicroseconds(Data.timeIntervals[1].get());
-                }
-
-                if (clip.getMicrosecondPosition() > cachedEndingIntervalPosition) {
-                    pause();
-                }
-            }
-        }, 0, 10, TimeUnit.MILLISECONDS);
-    }
     public static void loadSong() {
-        if (currentSong != null) {
+        if (currentAudio != null) {
             reset();
-            try (AudioInputStream inputStream = AudioSystem.getAudioInputStream(currentSong.toFile())) {
+            try (AudioInputStream inputStream = AudioSystem.getAudioInputStream(currentAudio.fullAudioPath.toFile())) {
                 clip = AudioSystem.getClip();
                 clip.open(inputStream);
             } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
@@ -50,12 +35,7 @@ public class MusicPlayer {
             return false;
         }
         if (!playing) {
-            if (Data.doIntervals) {
-                cachedEndingIntervalPosition = -1;
-                clip.setMicrosecondPosition(BeatFile.secondsToMicroseconds(Data.timeIntervals[0].get()));
-            } else {
-                clip.setMicrosecondPosition(position);
-            }
+            clip.setMicrosecondPosition(position);
             clip.start();
             playing = !playing;
             MainGUI.isPlayButtonPressed = true;
@@ -84,6 +64,7 @@ public class MusicPlayer {
     }
 
     private static void reset() {
+        Data.loadedStems.clear();
         if (clip != null) {
             clip.close();
             playing = false;

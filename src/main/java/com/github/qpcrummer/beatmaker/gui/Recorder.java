@@ -30,7 +30,7 @@ public class Recorder {
                 enable = false;
             }
 
-            if (MusicPlayer.currentSong == null) {
+            if (MusicPlayer.currentAudio == null) {
                 ImGui.text("Please select a song using File -> Open WAV");
                 ImGui.end();
                 return;

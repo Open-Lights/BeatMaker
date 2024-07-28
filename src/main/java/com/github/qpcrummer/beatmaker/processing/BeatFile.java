@@ -99,7 +99,7 @@ public class BeatFile {
     }
 
     private static String getSongName() {
-        return MusicPlayer.currentSong.getFileName().toString().replace(".wav", "");
+        return MusicPlayer.currentAudio.fullAudioPath.getFileName().toString().replace(".wav", "");
     }
 
     /**
