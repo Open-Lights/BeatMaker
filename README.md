@@ -1,18 +1,22 @@
 # BeatMaker
-Creates and edits beat files for ChristmasJukebox.
-A continuation of BeatFileEditor.
-
+Creates and edits beat files for [Open Lights Core](https://github.com/QPCrummer/OpenLightsCore).\
+This is a continuation of my [BeatFileEditor](https://github.com/QPCrummer/BeatFileEditor).\
+\
+A guide for using this software can be found [here](https://github.com/QPCrummer/OpenLightsCore/wiki/Open-Lights-BeatMaker-Tour)
 ---
 
 ## About
-The BeatFileEditor for ChristmasJukebox allows editing beats based on the inputted song.
+Open Lights BeatMaker allows editing beats based on the inputted song.
 Some features include:
 - Beat recording: Record beats with your mouse while the song is playing
+- Onset and BPM-based beat generation
+- Custom lighting effects **(WIP)**
 - In-depth beat editing: Chart editor for millisecond accuracy
 - Per-channel editing: Edit for one channel, or edit for many channels at once
 - Light show preview: See how your light show will appear as you play the song
 - Simple User Interface: Edit a beat interval just by typing
 - Loading charts: Ability to load charts from beat files
+- Demucs AI integration to allow for instrument-specific beat generation
 
 ---
 
