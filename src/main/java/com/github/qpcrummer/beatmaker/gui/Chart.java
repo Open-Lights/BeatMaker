@@ -114,7 +114,7 @@ public class Chart {
         Iterator<ImDouble[]> iterator = this.timestamps.listIterator();
         int index = 0;
 
-        ImGui.setCursorPosX(x);
+        ImGui.setCursorPos(x, ImGui.getCursorPosY() - 15f);
         ImGui.beginChild("values##" + this.id, width + 15, ImGui.getIO().getDisplaySize().y - 8 * MainGUI.TOOLBAR_HEIGHT);
         while (iterator.hasNext()) {
             ImDouble[] doubles = iterator.next();

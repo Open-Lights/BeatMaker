@@ -148,8 +148,7 @@ public class MainGUI {
 
             // Rewind
             if (ImGui.menuItem("Rewind")) {
-                MusicPlayer.setPosition(0);
-                BeatManager.resetBeats();
+                MusicPlayer.rewind();
                 isPlayButtonPressed = false;
             }
 

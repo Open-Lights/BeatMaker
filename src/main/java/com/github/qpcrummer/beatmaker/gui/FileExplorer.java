@@ -61,24 +61,24 @@ public class FileExplorer {
 
                         if (name.isBlank()) {
                             name = file.getPath();
-                        } else if (file.isDirectory()) {
-                            name = name + folder;
+                        }
+                        if (file.isDirectory()) {
+                            name += folder;
                         }
 
-                        ImGui.selectable(name, selectedFile != null && selectedFile.equals(file),
-                                ImGuiSelectableFlags.SpanAllColumns);
-
-                        // Check if the item is selected and a directory
-                        if (ImGui.isItemClicked(0) && file.isDirectory()) {
-                            // Change directory if a directory is clicked
-                            currentDirectory = file;
-                            updateFiles();
-                        }
-
-                        // Check if the item is selected and not a directory
-                        if (ImGui.isItemClicked(0) && !file.isDirectory()) {
-                            // Update the selected file
-                            selectedFile = file;
+                        if (ImGui.selectable(name, selectedFile != null && selectedFile.equals(file),
+                                ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.DontClosePopups)) {
+                            if (file.isDirectory()) {
+                                // Change directory if a directory is clicked
+                                currentDirectory = file;
+                                updateFiles();
+                                ImGui.treePop();
+                                ImGui.endPopup();
+                                return;
+                            } else {
+                                // Update the selected file
+                                selectedFile = file;
+                            }
                         }
                     }
                 }

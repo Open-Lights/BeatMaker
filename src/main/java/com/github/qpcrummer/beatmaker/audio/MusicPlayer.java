@@ -3,6 +3,7 @@ package com.github.qpcrummer.beatmaker.audio;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.gui.MainGUI;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
+import com.github.qpcrummer.beatmaker.processing.BeatManager;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
@@ -59,6 +60,12 @@ public class MusicPlayer {
         position = microsecondPosition;
         MainGUI.time.set(BeatFile.millisecondsToSecondsFormatted(MusicPlayer.getPositionMilliseconds()));
         return true;
+    }
+
+    public static void rewind() {
+        MusicPlayer.pause();
+        MusicPlayer.setPosition(0);
+        BeatManager.resetBeats();
     }
 
     private static void reset() {
