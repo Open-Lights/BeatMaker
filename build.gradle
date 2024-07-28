@@ -5,9 +5,11 @@ plugins {
     id "application"
 }
 
+
+import org.codehaus.groovy.runtime.GStringImpl
 import org.gradle.internal.os.OperatingSystem
 
-project.ext.lwjglVersion = "3.3.3"
+project.ext.lwjglVersion = "3.3.4"
 
 group = 'com.github.qpcrummer'
 version = '1.0.0'
@@ -22,7 +24,7 @@ repositories {
 
 switch (OperatingSystem.current()) {
     case OperatingSystem.LINUX:
-        project.ext.lwjglNatives = "natives-linux"
+        project.ext.lwjglNatives = "natives-linux" as GStringImpl
         def osArch = System.getProperty("os.arch")
         if (osArch.startsWith("arm") || osArch.startsWith("aarch64")) {
             project.ext.lwjglNatives += osArch.contains("64") || osArch.startsWith("armv8") ? "-arm64" : "-arm32"
@@ -36,7 +38,7 @@ switch (OperatingSystem.current()) {
         def osArch = System.getProperty("os.arch")
         project.ext.lwjglNatives = osArch.contains("64")
                 ? "natives-windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
-                : "natives-windows-x86"
+                : "natives-windows-x86" as GStringImpl
         break
 }
 

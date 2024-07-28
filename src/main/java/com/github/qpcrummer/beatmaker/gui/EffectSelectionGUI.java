@@ -1,9 +1,10 @@
 package com.github.qpcrummer.beatmaker.gui;
 
-import com.github.qpcrummer.beatmaker.data.Data;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.github.qpcrummer.beatmaker.utils.ListUtils;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
+import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 import imgui.type.ImDouble;
 import imgui.type.ImInt;
@@ -56,19 +57,19 @@ public class EffectSelectionGUI {
         selectedChannelsMod.clear();
 
         blink.clear();
-        for (int i = 0; i < Data.totalChannels; i++) {
+        for (int i = 0; i < Config.channels; i++) {
             blink.add(false);
         }
     }
     public static void render() {
-        if (ImGui.beginPopupModal("Effect Selection")) {
-
+        if (ImGui.beginPopupModal("Effect Selection", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize)) {
+            ImGui.setWindowSize(400f, 400f);
             ImGui.text("Effects");
             ImGui.combo("##Effects", imInt, effects);
 
             // Draw the boxes
-            int columns = Math.min(Data.totalChannels, 4);
-            for (Integer i = 0; i < Data.totalChannels; i++) {
+            int columns = Math.min(Config.channels, 4);
+            for (Integer i = 0; i < Config.channels; i++) {
                 if (i % columns != 0) {
                     ImGui.sameLine();
                 }
@@ -107,7 +108,7 @@ public class EffectSelectionGUI {
             ImGui.sameLine();
 
             if (ImGui.button("Export")) {
-
+                // TODO Export to actual beats
                 if (executorService != null) {
                     executorService.shutdownNow();
                 }

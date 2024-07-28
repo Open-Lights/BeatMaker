@@ -11,15 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Data {
-    /**
-     * The total channels available on your setup to control
-     * Default: 16
-     */
-    public static int totalChannels = Config.channels;
-
     /**
      * List of Integers of the available channels that aren't being used
      */
@@ -51,11 +44,6 @@ public class Data {
     public static final Path savePath = Paths.get("saves");
 
     /**
-     * Minimum beat length in seconds
-     */
-    public static final double MINIMUM_BEAT_LENGTH = Config.minBeatLength;
-
-    /**
      * Stems that are in the current song
      */
     public static final Map<StemmedAudio.StemType, Boolean> loadedStems = new HashMap<>();
@@ -64,7 +52,7 @@ public class Data {
      * Fills the availableChannels List
      */
     public static void initialize() {
-        for (int i = 0; i < totalChannels; i++) {
+        for (int i = 0; i < Config.channels; i++) {
             availableChannels.add(i);
             blinkBooleans.add(false);
         }
@@ -72,15 +60,15 @@ public class Data {
 
     /**
      * Sets the total number of channels available to control
-     * Default: 16
+     * Default: Specified by Config
      * @param newAmount New total
      */
     public static void updateChannels(int newAmount) {
-        if (newAmount > totalChannels) {
-            availableChannels.addAll(difference(newAmount - 1, totalChannels - 1, true, false));
-            totalChannels = newAmount;
-        } else if (newAmount < totalChannels) {
-            for (Integer n : difference(totalChannels - 1, newAmount - 1, true, false)) {
+        if (newAmount > Config.channels) {
+            availableChannels.addAll(difference(newAmount - 1, Config.channels - 1, true, false));
+            Config.channels = newAmount;
+        } else if (newAmount < Config.channels) {
+            for (Integer n : difference(Config.channels - 1, newAmount - 1, true, false)) {
                 if (availableChannels.contains(n)) {
                     availableChannels.remove(n);
                 } else {
@@ -93,11 +81,11 @@ public class Data {
                 }
             }
 
-            totalChannels = newAmount;
+            Config.channels = newAmount;
         }
 
         blinkBooleans.clear();
-        for (int i = 0; i < totalChannels; i++) {
+        for (int i = 0; i < Config.channels; i++) {
             blinkBooleans.add(false);
         }
     }

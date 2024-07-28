@@ -7,6 +7,7 @@ import imgui.ImGui;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTreeNodeFlags;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
+import imgui.flag.ImGuiWindowFlags;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -16,7 +17,6 @@ public class FileExplorer {
     private static final String folder = " (Folder)";
     private static File currentDirectory = new File(System.getProperty("user.dir"));
     private static File[] files;
-    public static boolean enabled;
 
     static {
         updateFiles();
@@ -30,9 +30,8 @@ public class FileExplorer {
     }
 
     public static void render() {
-        if (enabled) {
-            // Start a new frame
-            ImGui.begin("File Explorer");
+        if (ImGui.beginPopupModal("File Explorer", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize)) {
+            ImGui.setWindowSize(600f, 400f);
 
             // Back button
             if (ImGui.button("Back")) {
@@ -116,7 +115,7 @@ public class FileExplorer {
             }
 
             // End the frame
-            ImGui.end();
+            ImGui.endPopup();
         }
     }
 
@@ -139,7 +138,7 @@ public class FileExplorer {
     }
 
     private static void reset() {
-        enabled = false;
+        ImGui.closeCurrentPopup();
         selectedFile = null;
         Main.logger.info("Hiding File Explorer GUI");
     }

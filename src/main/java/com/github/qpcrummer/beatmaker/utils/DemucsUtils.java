@@ -21,9 +21,11 @@ import java.util.regex.Pattern;
 public class DemucsUtils {
     private static final ExecutorService downloader = Executors.newSingleThreadExecutor();
     public static void createStems(StemmedAudio stemmedAudio, boolean sixChannels) {
-        if (stemmedAudio!= null && stemmedAudio.hasStems()) {
+        if (stemmedAudio == null || stemmedAudio.hasStems()) {
             return;
         }
+
+        DemucsGUI.enable = true;
 
         Path audioPath = stemmedAudio.fullAudioPath;
 

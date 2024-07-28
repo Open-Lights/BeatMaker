@@ -16,9 +16,9 @@ import java.util.logging.Logger;
 public class Main extends Application {
     private long previousTime = System.currentTimeMillis();
     private int targetFrameRate = 15;
-    private static final int WINDOW_WIDTH = 800;
-    private static final int WINDOW_HEIGHT = 600;
-    public static final Logger logger = Logger.getLogger("Christmas Celebrator Beat Editor");
+    public static final int WINDOW_WIDTH = 800;
+    public static final int WINDOW_HEIGHT = 600;
+    public static final Logger logger = Logger.getLogger("Open Lights BeatMaker");
 
     public static void main(String[] args) {
         Config.loadConfig();
@@ -32,7 +32,7 @@ public class Main extends Application {
     @Override
     protected void preRun() {
         super.preRun();
-        logger.info("Loading Christmas Celebrator Song Editor");
+        logger.info("Loading Open Lights BeatMaker");
         Data.initialize();
         BeatManager.initialize();
 
@@ -59,7 +59,7 @@ public class Main extends Application {
 
     @Override
     protected void configure(Configuration config) {
-        config.setTitle("Christmas Celebrator Song Editor");
+        config.setTitle("Open Lights BeatMaker");
         config.setHeight(WINDOW_HEIGHT);
         config.setWidth(WINDOW_WIDTH);
     }

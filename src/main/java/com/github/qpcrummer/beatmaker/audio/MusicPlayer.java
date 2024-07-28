@@ -6,11 +6,9 @@ import com.github.qpcrummer.beatmaker.processing.BeatFile;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
 public class MusicPlayer {
-    //public static Path currentSong;
     // TODO Support playing only stems
     public static StemmedAudio currentAudio;
     private static Clip clip;

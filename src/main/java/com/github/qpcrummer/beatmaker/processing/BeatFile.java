@@ -5,6 +5,7 @@ import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.gui.Chart;
 import com.github.qpcrummer.beatmaker.gui.MainGUI;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -49,7 +50,7 @@ public class BeatFile {
             double first = timestamp[0].get();
             double last = timestamp[1].get();
 
-            if (last == 0 || first + Data.MINIMUM_BEAT_LENGTH > last) {
+            if (last == 0 || first + Config.minBeatLength > last) {
                 data.put(secondsToMilliseconds(first), ON);
                 data.put(secondsToMilliseconds(first + 0.2), OFF);
             } else {
@@ -66,7 +67,7 @@ public class BeatFile {
         try (FileWriter writer = new FileWriter(path)) {
             gson.toJson(data, writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.logger.warning("Failed to save beat file: " + e.getMessage());
         }
         Main.logger.info("Data saved as a json");
     }
@@ -151,7 +152,7 @@ public class BeatFile {
                 charts.add(chart);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Main.logger.warning("Failed to read beat file: " + e.getMessage());
         }
         return charts;
     }

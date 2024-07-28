@@ -6,6 +6,7 @@ import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
 import com.github.qpcrummer.beatmaker.processing.Generator;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.github.qpcrummer.beatmaker.utils.DemucsUtils;
 import imgui.ImGui;
 import imgui.flag.ImGuiCol;
@@ -13,9 +14,7 @@ import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImDouble;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MainGUI {
@@ -35,27 +34,33 @@ public class MainGUI {
         // Calculate panel widths
         PANEL_WIDTH = ImGui.getIO().getDisplaySize().x * 0.7f;
 
-        ImGui.begin("Editor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground);
+        ImGui.begin("Open Lights Editor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground);
 
         // Toolbar
         if (ImGui.beginMainMenuBar()) {
             // File Menu
+            boolean openFileExplorer = false;
             if (ImGui.beginMenu("File")) {
                 if (ImGui.menuItem("Open WAV")) {
                     FileExplorer.setFileExplorerType(false);
-                    FileExplorer.enabled = true;
+                    openFileExplorer = true;
                 }
                 if (ImGui.menuItem("Open Beat")) {
                     FileExplorer.setFileExplorerType(true);
-                    FileExplorer.enabled = true;
+                    openFileExplorer = true;
                 }
                 if (ImGui.menuItem("Save All")) {
                     BeatFile.saveAll();
                 }
                 ImGui.endMenu();
             }
+            if (openFileExplorer) {
+                ImGui.openPopup("File Explorer");
+            }
+            FileExplorer.render();
 
             // Edit Menu
+            boolean openChannel = false;
             if (ImGui.beginMenu("Edit")) {
                 if (ImGui.menuItem("Add Beat Guide")) {
                     Data.charts.add(new Chart(CHART_WIDTH, ThreadLocalRandom.current().nextInt(), true));
@@ -68,13 +73,18 @@ public class MainGUI {
                     BeatGuideInteractionGUI.removal = false;
                     BeatGuideInteractionGUI.enable = true;
                 }
-                if (ImGui.menuItem("Channel Configuration")) {
-                    ChannelInteractionGUI.enable = true;
+                if (ImGui.menuItem("Channel Settings")) {
+                    openChannel = true;
                 }
                 ImGui.endMenu();
             }
+            if (openChannel) {
+                ImGui.openPopup("Channel Configuration");
+            }
+            ChannelInteractionGUI.render();
 
             // Generate
+            boolean openGenerator = false;
             if (ImGui.beginMenu("Generate")) {
                 if (ImGui.menuItem("Generate Percussion Beat Files")) {
                     Generator.generatePercussionChartsForSong();
@@ -89,10 +99,14 @@ public class MainGUI {
                     Generator.generateWithOnsetExtractor();
                 }
                 if (ImGui.menuItem("Generator Configuration")) {
-                    BeatGenerationGUI.enable = true;
+                    openGenerator = true;
                 }
                 ImGui.endMenu();
             }
+            if (openGenerator) {
+                ImGui.openPopup("Generation Configuration");
+            }
+            BeatGenerationGUI.render();
 
             // Effects
             ImGui.pushStyleColor(ImGuiCol.Button, ImGuiCol.MenuBarBg);
@@ -108,19 +122,18 @@ public class MainGUI {
             if (DemucsUtils.isDemucsEnabled() && ImGui.beginMenu("AI Generation")) {
                 if (ImGui.menuItem("Generate With 4 Stems")) {
                     DemucsUtils.createStems(MusicPlayer.currentAudio, false);
-                    DemucsGUI.enable = true;
                 }
                 if (ImGui.menuItem("Generate With 6 Stems")) {
                     DemucsUtils.createStems(MusicPlayer.currentAudio, true);
-                    DemucsGUI.enable = true;
                 }
                 ImGui.endMenu();
             }
 
             // Record Menu
             if (ImGui.menuItem("Record")) {
-                Recorder.enable = true;
+                ImGui.openPopup("Beat Recorder");
             }
+            Recorder.render();
 
             // Play Menu
             if (ImGui.menuItem(isPlayButtonPressed ? "Pause" : "Play")) {
@@ -199,10 +212,10 @@ public class MainGUI {
             int maxBoxesPerRow = (int) (maxPanelWidth / BOX_LENGTH);
 
             // Calculate the number of columns
-            int columns = Math.min(Data.totalChannels, maxBoxesPerRow);
+            int columns = Math.min(Config.channels, maxBoxesPerRow);
 
             // Draw the boxes
-            for (int i = 0; i < Data.totalChannels; i++) {
+            for (int i = 0; i < Config.channels; i++) {
                 if (i % columns != 0) {
                     ImGui.sameLine();
                 }

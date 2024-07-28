@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.github.qpcrummer.beatmaker.utils.ListUtils;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -188,7 +189,7 @@ public class Chart {
             double last = this.timestamps.get(this.index)[1].get();
             double difference = last - first;
 
-            if (last == 0 || difference < Data.MINIMUM_BEAT_LENGTH) {
+            if (last == 0 || difference < Config.minBeatLength) {
                 difference = 0.2;
             }
 
