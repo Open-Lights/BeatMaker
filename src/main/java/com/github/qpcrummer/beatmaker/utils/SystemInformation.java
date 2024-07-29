@@ -1,22 +1,26 @@
 package com.github.qpcrummer.beatmaker.utils;
 
 import org.lwjgl.system.Platform;
+/*
 import oshi.SystemInfo;
 import oshi.hardware.GraphicsCard;
 import oshi.hardware.HardwareAbstractionLayer;
 
+ */
+
 public class SystemInformation {
-    public final GPUVendor[] gpus;
+    //public final GPUVendor[] gpus;
     public final Platform operatingSystem;
-    public final float[] vram; // In GBs
+    //public final float[] vram; // In GBs
     public final Platform.Architecture arch;
 
     public SystemInformation() {
 
-        SystemInfo si = new SystemInfo();
-        HardwareAbstractionLayer hal = si.getHardware();
+        //SystemInfo si = new SystemInfo();
+        //HardwareAbstractionLayer hal = si.getHardware();
         this.operatingSystem = Platform.get();
 
+        /*
         int gpuCount = hal.getGraphicsCards().size();
         GPUVendor[] vendors = new GPUVendor[gpuCount];
         float[] vramTotal = new float[gpuCount];
@@ -28,6 +32,8 @@ public class SystemInformation {
         }
         this.gpus = vendors;
         this.vram = vramTotal;
+
+         */
 
         this.arch = Platform.getArchitecture();
     }

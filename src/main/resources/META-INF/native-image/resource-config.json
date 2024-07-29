@@ -1,0 +1,156 @@
+{
+  "resources":{
+    "includes":[
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/assimp/libassimp.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/glfw/libglfw.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/liblwjgl.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/openal/libopenal.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/opengl/liblwjgl_opengl.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/arm64/org/lwjgl/stb/liblwjgl_stb.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/assimp/libassimp.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/glfw/libglfw.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/liblwjgl.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/openal/libopenal.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/opengl/liblwjgl_opengl.so\\E"
+      },
+      {
+        "pattern":"\\Qlinux/x64/org/lwjgl/stb/liblwjgl_stb.so\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/assimp/libassimp.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/glfw/libglfw.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/liblwjgl.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/openal/libopenal.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/opengl/liblwjgl_opengl.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/arm64/org/lwjgl/stb/liblwjgl_stb.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/assimp/libassimp.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/glfw/libglfw.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/liblwjgl.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/openal/libopenal.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/opengl/liblwjgl_opengl.dylib\\E"
+      },
+      {
+        "pattern":"\\Qmacos/x64/org/lwjgl/stb/liblwjgl_stb.dylib\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/assimp/assimp.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/glfw/glfw.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/lwjgl.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/openal/OpenAL.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/opengl/lwjgl_opengl.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/arm64/org/lwjgl/stb/lwjgl_stb.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/assimp/assimp.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/glfw/glfw.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/lwjgl.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/openal/OpenAL.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/opengl/lwjgl_opengl.dll\\E"
+      },
+      {
+        "pattern":"\\Qwindows/x64/org/lwjgl/stb/lwjgl_stb.dll\\E"
+      },
+      {
+        "pattern":"\\Qio/imgui/java/native-bin/imgui-java64.dll\\E"
+      },
+      {
+        "pattern":"\\Qio/imgui/java/native-bin/libimgui-java64.dylib\\E"
+      },
+      {
+        "pattern":"\\Qio/imgui/java/native-bin/libimgui-java64.so\\E"
+      },
+      {
+        "pattern":"\\QMETA-INF/MANIFEST.MF\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/java.lang.System$LoggerFinder\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/java.net.spi.InetAddressResolverProvider\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/java.net.spi.URLStreamHandlerProvider\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/java.time.zone.ZoneRulesProvider\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/javax.sound.sampled.spi.AudioFileReader\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/javax.sound.sampled.spi.MixerProvider\\E"
+      }, {
+        "pattern":"\\QMETA-INF/services/org.slf4j.spi.SLF4JServiceProvider\\E"
+      }, {
+        "pattern":"\\Qcom/sun/jna/win32-x86-64/jnidispatch.dll\\E"
+      }, {
+        "pattern":"\\Qimgui/imgui-java.properties\\E"
+      }, {
+        "pattern":"\\Qio/imgui/java/native-bin/imgui-java64.dll\\E"
+      }, {
+        "pattern":"\\Qopengl32.dll\\E"
+      }, {
+        "pattern":"\\Qorg/lwjgl/Version.class\\E"
+      }, {
+        "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/nfkc.nrm\\E"
+      }, {
+        "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt72b/uprops.icu\\E"
+      }, {
+        "pattern":"java.base:\\Qsun/net/idn/uidna.spp\\E"
+      }
+    ]},
+  "bundles":[]
+}

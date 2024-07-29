@@ -2,10 +2,9 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'org.graalvm.buildtools.native' version '0.10.2'
+    id 'com.google.osdetector' version '1.7.3'
     id "application"
 }
-
-import org.gradle.internal.os.OperatingSystem
 
 project.ext.lwjglVersion = "3.3.4"
 
@@ -20,27 +19,34 @@ repositories {
     }
 }
 
-switch (OperatingSystem.current()) {
-    case OperatingSystem.LINUX:
-        project.ext.lwjglNatives = "natives-linux"
-        def osArch = System.getProperty("os.arch")
-        if (osArch.startsWith("arm") || osArch.startsWith("aarch64")) {
-            project.ext.lwjglNatives += osArch.contains("64") || osArch.startsWith("armv8") ? "-arm64" : "-arm32"
-        } else if  (osArch.startsWith("ppc")) {
-            project.ext.lwjglNatives += "-ppc64le"
-        } else if  (osArch.startsWith("riscv")) {
-            project.ext.lwjglNatives += "-riscv64"
-        }
-        break
-    case OperatingSystem.MAC_OS:
-        project.ext.lwjglNatives = System.getProperty("os.arch").startsWith("aarch64") ? "natives-macos-arm64" : "natives-macos"
-        break
-    case OperatingSystem.WINDOWS:
-        def osArch = System.getProperty("os.arch")
-        project.ext.lwjglNatives = osArch.contains("64")
-                ? "natives-windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
-                : "natives-windows-x86"
-        break
+def getCurrentPlatform() {
+    def os = osdetector.os
+    def lwjglOS = os == 'linux' ? 'linux' :
+            os == 'osx' ? 'macos' :
+                    os == 'windows' ? 'windows' :
+                            'unknown'
+    if (lwjglOS == 'unknown')
+        throw new GradleException('Unsupported OS: ' + os)
+
+    def arch = osdetector.arch
+    //consider 64-bit architectures only
+    def lwjglArch = arch == 'x86_64' ? '' :
+            arch == 'aarch_64' ? 'arm64' :
+                    'unknown'
+    if (lwjglArch == 'unknown')
+        throw new GradleException('Unsupported Architecture: ' + arch)
+
+    return (lwjglArch == '' ? lwjglOS : (lwjglOS + '-' + lwjglArch))
+}
+
+ext {
+    lwjglVersion = '3.3.4'
+
+    //LWJGL modules used: minimal OpenGL
+    lwjglModules = ['lwjgl', 'lwjgl-assimp', 'lwjgl-glfw', 'lwjgl-openal', 'lwjgl-opengl', 'lwjgl-stb']
+
+    //mainClassName = 'com.github.qpcrummer.beatmaker.Main'
+    currentPlatform = getCurrentPlatform()
 }
 
 dependencies {
@@ -52,23 +58,28 @@ dependencies {
     implementation 'be.tarsos.dsp:core:2.5'
     implementation 'be.tarsos.dsp:jvm:2.5'
     implementation 'com.google.code.gson:gson:2.11.0'
-    implementation 'com.github.oshi:oshi-core:6.6.1'
+    // TODO GPU Accel Demucs
+    //implementation 'com.github.oshi:oshi-core:6.6.1'
     implementation 'net.lingala.zip4j:zip4j:2.11.5'
 
+    //get recommended dependency versions from the LWJGL BOM
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
 
-    implementation "org.lwjgl:lwjgl"
-    implementation "org.lwjgl:lwjgl-assimp"
-    implementation "org.lwjgl:lwjgl-glfw"
-    implementation "org.lwjgl:lwjgl-openal"
-    implementation "org.lwjgl:lwjgl-opengl"
-    implementation "org.lwjgl:lwjgl-stb"
-    runtimeOnly "org.lwjgl:lwjgl::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-assimp::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-glfw::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-openal::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-opengl::$lwjglNatives"
-    runtimeOnly "org.lwjgl:lwjgl-stb::$lwjglNatives"
+    //add LWJGL modules and the current OS's natives to the compile and runtime classpaths
+    lwjglModules.each {
+        implementation "org.lwjgl:$it"
+        if (it != 'lwjgl-egl')  //lwjgl-egl has no native libraries
+            runtimeOnly "org.lwjgl:$it::natives-$currentPlatform"
+    }
+}
+
+task extractLwjglManifest(type: Copy) {
+    from {
+        configurations.compileClasspath.filter { it.name == "lwjgl-${lwjglVersion}.jar" }
+                .collect { zipTree(it) }
+    }
+    include 'META-INF/MANIFEST.MF'
+    into "$buildDir/tmp"
 }
 
 application {
@@ -76,11 +87,25 @@ application {
 }
 
 graalvmNative {
+    toolchainDetection = false
     binaries {
         main {
             imageName = "OpenLightsBeatMaker"
             mainClass = "com.github.qpcrummer.beatmaker.Main"
+            debug = false
+            verbose = false
+            fallback = false
+
+            buildArgs.add('--initialize-at-run-time=org.lwjgl')
+            buildArgs.add('--initialize-at-run-time=io.imgui')
+            buildArgs.add('--native-image-info')
+            buildArgs.add('-march=compatibility')
+
+            useFatJar = false
         }
+    }
+    metadataRepository {
+        enabled = false
     }
 }
 

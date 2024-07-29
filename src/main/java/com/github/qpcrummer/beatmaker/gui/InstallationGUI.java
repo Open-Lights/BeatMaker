@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.Main;
 import com.github.qpcrummer.beatmaker.utils.DemucsInstaller;
+import com.github.qpcrummer.beatmaker.utils.FileDownloadingUtils;
 import com.github.qpcrummer.beatmaker.utils.GUIUtils;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -9,12 +10,11 @@ import imgui.app.Application;
 import imgui.app.Configuration;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImInt;
-import org.lwjgl.opengl.GL11C;
 
-import java.net.URISyntaxException;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,6 +30,9 @@ public class InstallationGUI extends Application {
     private static final int WINDOW_HEIGHT = 600;
     private int[] BACKGROUND_TEXTURE;
     private int[] LOADING_BAR_TEXTURE;
+    private final Path assets = Path.of("openlights/assets/");
+    private final Path backgroundImg = Path.of("openlights/assets/installation_background.png");
+    private final Path loadingBarImg = Path.of("openlights/assets/loading_bar.png");
     public static AtomicInteger progress = new AtomicInteger(0);
     public static AtomicReference<String> currentTask = new AtomicReference<>("Please Select Your Installation Method");
     public static AtomicBoolean renderDropdownSelection = new AtomicBoolean(false);
@@ -50,16 +53,21 @@ public class InstallationGUI extends Application {
     protected void preRun() {
         super.preRun();
         glfwSetWindowAttrib(this.getHandle(), GLFW_RESIZABLE, 0);
-        Path bkgdPath = null;
-        Path loadingPath = null;
-        try {
-            bkgdPath = Paths.get(getClass().getClassLoader().getResource("assets/installation_background.png").toURI());
-            loadingPath = Paths.get(getClass().getClassLoader().getResource("assets/loading_bar.png").toURI());
-        } catch (URISyntaxException e) {
-            Main.logger.warning("Failed to load textures");
+        downloadAssets();
+        BACKGROUND_TEXTURE = loadTextureFromFile(backgroundImg);
+        LOADING_BAR_TEXTURE = loadTextureFromFile(loadingBarImg);
+    }
+
+    private void downloadAssets() {
+        if (Files.notExists(assets)) {
+            try {
+                Files.createDirectory(assets);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        BACKGROUND_TEXTURE = loadTextureFromFile(bkgdPath);
-        LOADING_BAR_TEXTURE = loadTextureFromFile(loadingPath);
+        FileDownloadingUtils.downloadFile("https://github.com/QPCrummer/BeatMaker/blob/demucs/src/main/resources/assets/installation_background.png?raw=true", backgroundImg);
+        FileDownloadingUtils.downloadFile("https://github.com/QPCrummer/BeatMaker/blob/demucs/src/main/resources/assets/loading_bar.png?raw=true", loadingBarImg);
     }
 
     @Override
