@@ -5,8 +5,6 @@ plugins {
     id "application"
 }
 
-
-import org.codehaus.groovy.runtime.GStringImpl
 import org.gradle.internal.os.OperatingSystem
 
 project.ext.lwjglVersion = "3.3.4"
@@ -24,7 +22,7 @@ repositories {
 
 switch (OperatingSystem.current()) {
     case OperatingSystem.LINUX:
-        project.ext.lwjglNatives = "natives-linux" as GStringImpl
+        project.ext.lwjglNatives = "natives-linux"
         def osArch = System.getProperty("os.arch")
         if (osArch.startsWith("arm") || osArch.startsWith("aarch64")) {
             project.ext.lwjglNatives += osArch.contains("64") || osArch.startsWith("armv8") ? "-arm64" : "-arm32"
@@ -34,11 +32,14 @@ switch (OperatingSystem.current()) {
             project.ext.lwjglNatives += "-riscv64"
         }
         break
+    case OperatingSystem.MAC_OS:
+        project.ext.lwjglNatives = System.getProperty("os.arch").startsWith("aarch64") ? "natives-macos-arm64" : "natives-macos"
+        break
     case OperatingSystem.WINDOWS:
         def osArch = System.getProperty("os.arch")
         project.ext.lwjglNatives = osArch.contains("64")
                 ? "natives-windows${osArch.startsWith("aarch64") ? "-arm64" : ""}"
-                : "natives-windows-x86" as GStringImpl
+                : "natives-windows-x86"
         break
 }
 
@@ -72,6 +73,15 @@ dependencies {
 
 application {
     mainClassName = 'com.github.qpcrummer.beatmaker.Main'
+}
+
+graalvmNative {
+    binaries {
+        main {
+            imageName = "OpenLightsBeatMaker"
+            mainClass = "com.github.qpcrummer.beatmaker.Main"
+        }
+    }
 }
 
 test {

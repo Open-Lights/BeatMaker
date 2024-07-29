@@ -11,6 +11,7 @@ import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImInt;
 import org.lwjgl.opengl.GL11C;
 
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,8 +50,16 @@ public class InstallationGUI extends Application {
     protected void preRun() {
         super.preRun();
         glfwSetWindowAttrib(this.getHandle(), GLFW_RESIZABLE, 0);
-        BACKGROUND_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "installation_background.png"));
-        LOADING_BAR_TEXTURE = loadTextureFromFile(Paths.get("src", "main", "resources", "assets", "loading_bar.png"));
+        Path bkgdPath = null;
+        Path loadingPath = null;
+        try {
+            bkgdPath = Paths.get(getClass().getClassLoader().getResource("assets/installation_background.png").toURI());
+            loadingPath = Paths.get(getClass().getClassLoader().getResource("assets/loading_bar.png").toURI());
+        } catch (URISyntaxException e) {
+            Main.logger.warning("Failed to load textures");
+        }
+        BACKGROUND_TEXTURE = loadTextureFromFile(bkgdPath);
+        LOADING_BAR_TEXTURE = loadTextureFromFile(loadingPath);
     }
 
     @Override
@@ -138,7 +147,7 @@ public class InstallationGUI extends Application {
             return new int[3];
         }
 
-        int imageTexture = GL11C.glGenTextures();
+        int imageTexture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, imageTexture);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
