@@ -21,11 +21,23 @@ public class Main extends Application {
     public static final Logger logger = Logger.getLogger("Open Lights BeatMaker");
 
     public static void main(String[] args) {
+        createMainDirectory();
         Config.loadConfig();
         if (DemucsInstaller.needsInstallation()) {
             launch(new InstallationGUI());
         } else {
             launch(new Main());
+        }
+    }
+
+    private static void createMainDirectory() {
+        Path path = Path.of("openlights/");
+        if (Files.notExists(path)) {
+            try {
+                Files.createDirectory(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

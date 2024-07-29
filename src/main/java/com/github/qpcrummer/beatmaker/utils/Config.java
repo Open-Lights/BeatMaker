@@ -28,11 +28,13 @@ public final class Config {
     /**
      * Save the config
      */
-    public static void saveConfig(){
+    public static void saveConfig(boolean creation){
         try (OutputStream output = Files.newOutputStream(CONFIG, StandardOpenOption.CREATE)) {
             fillDefaults();
-            getValues();
-            Main.logger.info("Saving Config");
+            if (!creation) {
+                getValues();
+                Main.logger.info("Saving Config");
+            }
             properties.store(output, null);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -61,7 +63,7 @@ public final class Config {
      */
     public static void loadConfig() {
         if (Files.notExists(CONFIG)) {
-            saveConfig();
+            saveConfig(true);
         }
 
         try (InputStream input = Files.newInputStream(CONFIG)) {

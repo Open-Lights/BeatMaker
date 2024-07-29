@@ -304,7 +304,7 @@ public class DemucsInstaller {
     private static void finishUp() {
         setCurrentTask("Preparing Open Lights Beat Editor");
         Config.installationShown = true;
-        Config.saveConfig();
+        Config.saveConfig(false);
         try {
             Thread.sleep(4000);
         } catch (InterruptedException e) {
