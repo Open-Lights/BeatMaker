@@ -12,6 +12,9 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class DemucsInstaller {
     private static final Path DEPENDENCIES = Path.of("openlights/dependencies");
@@ -56,6 +59,7 @@ public class DemucsInstaller {
                 }
 
                 downloadFFMPEG();
+                installPyTorch();
                 installPySoundFile();
                 installDemucs();
                 Config.demucsInstalled = true;
@@ -243,16 +247,35 @@ public class DemucsInstaller {
     }
 
     private static void installPySoundFile() {
-        installPackageWithPip("PySoundFile", 3, 6, 0, 45);
+        installPackageWithPip("PySoundFile", pipProcess("PySoundFile"),  3, 6, 0, 45);
+    }
+
+    private static void installPyTorch() {
+        if (supportsCUDA()) {
+            installPackageWithPip("PyTorch with CUDA 11.8", pipProcess("torch==2.1.2+cu118", "-f", "https://download.pytorch.org/whl/torch_stable.html"),  2, 2, 0, 60);
+            installPackageWithPip("PyTorch Audio", pipProcess("torchaudio==2.1.2+cu118", "-f", "https://download.pytorch.org/whl/torch_stable.html"),  2, 1, 0, 65);
+        }
     }
 
     private static void installDemucs() {
-        installPackageWithPip("demucs", 30, 55, 11, 90);
+        installPackageWithPip("Demucs", pipProcess("demucs"),  30, 55, 11, 90);
     }
 
-    private static void installPackageWithPip(String pkg, int packagesCollected, int packagesDownloaded, int packagesBuilt, int finalGoal) {
+    private static ProcessBuilder pipProcess(String pkg, String... args) {
+        List<String> command = new ArrayList<>();
+        command.add("cmd");
+        command.add("/c");
+        command.add("pip.exe");
+        command.add("install");
+        command.add(pkg);
+        command.addAll(Arrays.asList(args));
+
+        return new ProcessBuilder(command).directory(PIP.toAbsolutePath().toFile());
+    }
+
+    private static void installPackageWithPip(String pkg, ProcessBuilder builder, int packagesCollected, int packagesDownloaded, int packagesBuilt, int finalGoal) {
         setCurrentTask("Installing Package: " + pkg);
-        ProcessBuilder builder = new ProcessBuilder("cmd", "/c", "pip.exe", "install", pkg).directory(PIP.toAbsolutePath().toFile());
+        resetDownloadProgress();
         int currentGap = finalGoal - InstallationGUI.progress.get();
         int preGoal = Math.round(finalGoal - (currentGap * 0.5f));
         int denominator = packagesBuilt + packagesDownloaded;
@@ -363,6 +386,15 @@ public class DemucsInstaller {
         return null;
     }
 
+    private static boolean supportsCUDA() {
+        for (int i = 0; i < info.gpus.length; i++) {
+            if (info.gpus[i] == SystemInformation.GPUVendor.NVIDIA && info.vram[i] >= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void setCurrentTask(String task) {
         InstallationGUI.currentTask.set(task);
     }
@@ -385,7 +417,12 @@ public class DemucsInstaller {
         }
     }
 
+    private static void resetDownloadProgress() {
+        gap = 0;
+    }
+
     private static void downloadFile(String fileUrl, Path destination, int progressGoal) {
+        resetDownloadProgress();
         try {
             URL url = URI.create(fileUrl).toURL();
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -412,6 +449,7 @@ public class DemucsInstaller {
     }
 
     private static void extractFile(Path input, Path output, int progressGoal) {
+        resetDownloadProgress();
         try (ZipFile zip = new ZipFile(input.toFile())) {
             ProgressMonitor progressMonitor = zip.getProgressMonitor();
             zip.setRunInThread(true);

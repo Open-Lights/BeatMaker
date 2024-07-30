@@ -33,9 +33,9 @@ If installed with Demucs, this software can be very demanding. Read the requirem
 - Memory: 500MB
 - Operating System: Any
 ### Open Lights Beat Maker with Demucs AI
-- Storage: 1.2GB
+- Storage: 6GB
 - Memory: 8GB
-- GPU: Preferably one that supports CUDA (Nvidia GTX / RTX), but it isn't required
+- GPU: Preferably one that supports CUDA (Nvidia GT300 or greater) with at least 2GB of VRAM, but it isn't required
 - Operating System: Windows 10/11
 
 ---
