@@ -9,7 +9,7 @@ plugins {
 project.ext.lwjglVersion = "3.3.4"
 
 group = 'com.github.qpcrummer'
-version = '1.0.0'
+version = '1.0.0-pre.1'
 
 repositories {
     mavenCentral()
