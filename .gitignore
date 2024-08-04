@@ -24,3 +24,9 @@ gradle-app.setting
 # Project-specific
 .ini
 .txt
+/saves
+/Test Audio
+*.ini
+.codiumai
+/openlights
+/output

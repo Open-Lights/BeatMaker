@@ -1,9 +1,10 @@
 package com.github.qpcrummer.beatmaker;
 
-import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.gui.*;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.utils.Config;
+import com.github.qpcrummer.beatmaker.utils.DemucsInstaller;
 import imgui.app.Application;
 import imgui.app.Configuration;
 
@@ -15,23 +16,39 @@ import java.util.logging.Logger;
 public class Main extends Application {
     private long previousTime = System.currentTimeMillis();
     private int targetFrameRate = 15;
-    private static final int WINDOW_WIDTH = 800;
-    private static final int WINDOW_HEIGHT = 600;
-    public static final Logger logger = Logger.getLogger("Christmas Celebrator Beat Editor");
+    public static final int WINDOW_WIDTH = 800;
+    public static final int WINDOW_HEIGHT = 600;
+    public static final Logger logger = Logger.getLogger("Open Lights BeatMaker");
 
     public static void main(String[] args) {
-        launch(new Main());
+        createMainDirectory();
+        Config.loadConfig();
+        if (DemucsInstaller.needsInstallation()) {
+            launch(new InstallationGUI());
+        } else {
+            launch(new Main());
+        }
+    }
+
+    private static void createMainDirectory() {
+        Path path = Path.of("openlights/");
+        if (Files.notExists(path)) {
+            try {
+                Files.createDirectory(path);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override
     protected void preRun() {
         super.preRun();
-        logger.info("Loading Christmas Celebrator Song Editor");
+        logger.info("Loading Open Lights BeatMaker");
         Data.initialize();
         BeatManager.initialize();
-        MusicPlayer.initialize();
 
-        Path saveDir = Path.of("saves\\");
+        Path saveDir = Path.of("saves/");
         if (Files.notExists(saveDir)) {
             try {
                 Files.createDirectory(saveDir);
@@ -48,12 +65,13 @@ public class Main extends Application {
         BeatGuideInteractionGUI.render();
         FileExplorer.render();
         Recorder.render();
+        DemucsGUI.render();
         BeatGenerationGUI.render();
     }
 
     @Override
     protected void configure(Configuration config) {
-        config.setTitle("Christmas Celebrator Song Editor");
+        config.setTitle("Open Lights BeatMaker");
         config.setHeight(WINDOW_HEIGHT);
         config.setWidth(WINDOW_WIDTH);
     }

@@ -1,17 +1,20 @@
 package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
+import com.github.qpcrummer.beatmaker.audio.StemmedAudio;
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
 import com.github.qpcrummer.beatmaker.processing.Generator;
+import com.github.qpcrummer.beatmaker.utils.Config;
+import com.github.qpcrummer.beatmaker.utils.DemucsUtils;
 import imgui.ImGui;
-import imgui.ImVec4;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
-import imgui.type.ImString;
+import imgui.type.ImDouble;
 
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MainGUI {
@@ -21,37 +24,43 @@ public class MainGUI {
     private static final float BOX_LENGTH = 50.0f; // Length of each box
     private static float maxPanelWidth; // Maximum width available for the Right Panel
     public static final float CHART_WIDTH = 150.0f;
-    public static final ImString time = new ImString();
+    public static final ImDouble time = new ImDouble();
 
     static {
-        time.set("0.000");
+        time.set(0.000);
     }
 
     public static void render() {
         // Calculate panel widths
         PANEL_WIDTH = ImGui.getIO().getDisplaySize().x * 0.7f;
 
-        ImGui.begin("Editor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground);
+        ImGui.begin("Open Lights Editor", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoBackground);
 
         // Toolbar
         if (ImGui.beginMainMenuBar()) {
             // File Menu
+            boolean openFileExplorer = false;
             if (ImGui.beginMenu("File")) {
                 if (ImGui.menuItem("Open WAV")) {
                     FileExplorer.setFileExplorerType(false);
-                    FileExplorer.enabled = true;
+                    openFileExplorer = true;
                 }
                 if (ImGui.menuItem("Open Beat")) {
                     FileExplorer.setFileExplorerType(true);
-                    FileExplorer.enabled = true;
+                    openFileExplorer = true;
                 }
                 if (ImGui.menuItem("Save All")) {
                     BeatFile.saveAll();
                 }
                 ImGui.endMenu();
             }
+            if (openFileExplorer) {
+                ImGui.openPopup("File Explorer");
+            }
+            FileExplorer.render();
 
             // Edit Menu
+            boolean openChannel = false;
             if (ImGui.beginMenu("Edit")) {
                 if (ImGui.menuItem("Add Beat Guide")) {
                     Data.charts.add(new Chart(CHART_WIDTH, ThreadLocalRandom.current().nextInt(), true));
@@ -64,13 +73,18 @@ public class MainGUI {
                     BeatGuideInteractionGUI.removal = false;
                     BeatGuideInteractionGUI.enable = true;
                 }
-                if (ImGui.menuItem("Channel Configuration")) {
-                    ChannelInteractionGUI.enable = true;
+                if (ImGui.menuItem("Channel Settings")) {
+                    openChannel = true;
                 }
                 ImGui.endMenu();
             }
+            if (openChannel) {
+                ImGui.openPopup("Channel Configuration");
+            }
+            ChannelInteractionGUI.render();
 
             // Generate
+            boolean openGenerator = false;
             if (ImGui.beginMenu("Generate")) {
                 if (ImGui.menuItem("Generate Percussion Beat Files")) {
                     Generator.generatePercussionChartsForSong();
@@ -85,13 +99,16 @@ public class MainGUI {
                     Generator.generateWithOnsetExtractor();
                 }
                 if (ImGui.menuItem("Generator Configuration")) {
-                    BeatGenerationGUI.enable = true;
+                    openGenerator = true;
                 }
                 ImGui.endMenu();
             }
+            if (openGenerator) {
+                ImGui.openPopup("Generation Configuration");
+            }
+            BeatGenerationGUI.render();
 
             // Effects
-
             ImGui.pushStyleColor(ImGuiCol.Button, ImGuiCol.MenuBarBg);
             if (ImGui.button("Effects")) {
                 EffectSelectionGUI.primeGUI();
@@ -101,10 +118,22 @@ public class MainGUI {
 
             EffectSelectionGUI.render();
 
+            //Demucs
+            if (DemucsUtils.isDemucsEnabled() && ImGui.beginMenu("AI Generation")) {
+                if (ImGui.menuItem("Generate With 4 Stems")) {
+                    DemucsUtils.createStems(MusicPlayer.currentAudio, false);
+                }
+                if (ImGui.menuItem("Generate With 6 Stems")) {
+                    DemucsUtils.createStems(MusicPlayer.currentAudio, true);
+                }
+                ImGui.endMenu();
+            }
+
             // Record Menu
             if (ImGui.menuItem("Record")) {
-                Recorder.enable = true;
+                ImGui.openPopup("Beat Recorder");
             }
+            Recorder.render();
 
             // Play Menu
             if (ImGui.menuItem(isPlayButtonPressed ? "Pause" : "Play")) {
@@ -119,24 +148,13 @@ public class MainGUI {
 
             // Rewind
             if (ImGui.menuItem("Rewind")) {
-                MusicPlayer.setPosition(0);
-                BeatManager.resetBeats();
+                MusicPlayer.rewind();
                 isPlayButtonPressed = false;
             }
 
-            // Music Interval
-            if (ImGui.checkbox("Interval", Data.doIntervals)) {
-                Data.doIntervals = !Data.doIntervals;
-            }
-
-            ImGui.pushItemWidth(100);
-            ImGui.inputDouble("##SongIntervalInput1", Data.timeIntervals[0], 0, 0, "%.3f");
-            ImGui.inputDouble("##SongIntervalInput2", Data.timeIntervals[1], 0, 0, "%.3f");
-            ImGui.popItemWidth();
-
             // Timer Text Box (on the far right)
             ImGui.sameLine(ImGui.getContentRegionMaxX() - ImGui.calcTextSize("000.000").x);
-            ImGui.text(time.get());
+            ImGui.inputDouble("##Time", time, 0, 0, "%.3f");
 
             ImGui.endMainMenuBar();
         }
@@ -161,6 +179,16 @@ public class MainGUI {
         float x = ImGui.getCursorPosX();
         float y = ImGui.getCursorPosY();
         ImGui.beginChild("Charts", PANEL_WIDTH, ImGui.getIO().getDisplaySize().y - 3 * yOffset, false,ImGuiWindowFlags.HorizontalScrollbar);
+        if (!Data.asyncCharts.isEmpty()) {
+            try {
+                Data.asyncChartsLock.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Data.charts.addAll(Data.asyncCharts);
+            Data.asyncCharts.clear();
+            Data.asyncChartsLock.release();
+        }
         for (Chart chart : Data.charts) {
             ImGui.setCursorPosY(y);
             ImGui.setCursorPosX(x);
@@ -183,10 +211,10 @@ public class MainGUI {
             int maxBoxesPerRow = (int) (maxPanelWidth / BOX_LENGTH);
 
             // Calculate the number of columns
-            int columns = Math.min(Data.totalChannels, maxBoxesPerRow);
+            int columns = Math.min(Config.channels, maxBoxesPerRow);
 
             // Draw the boxes
-            for (int i = 0; i < Data.totalChannels; i++) {
+            for (int i = 0; i < Config.channels; i++) {
                 if (i % columns != 0) {
                     ImGui.sameLine();
                 }
@@ -204,6 +232,23 @@ public class MainGUI {
                     ImGui.popStyleColor();
                 }
                 ImGui.popID();
+            }
+
+            if (DemucsUtils.isDemucsEnabled()) {
+                for (Map.Entry<StemmedAudio.StemType, Boolean> entry : Data.loadedStems.entrySet()) {
+                    StemmedAudio.StemType stemType = entry.getKey();
+                    boolean isLoaded = entry.getValue();
+                    String title = DemucsUtils.stemToString(stemType);
+                    if (isLoaded) {
+                        ImGui.pushStyleColor(ImGuiCol.Button, 16, 147, 2, 255);
+                    }
+                    if (ImGui.button(title)) {
+                        Data.loadedStems.put(stemType, !isLoaded);
+                    }
+                    if (isLoaded) {
+                        ImGui.popStyleColor();
+                    }
+                }
             }
 
             ImGui.end();

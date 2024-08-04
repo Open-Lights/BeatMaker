@@ -3,7 +3,6 @@ package com.github.qpcrummer.beatmaker.processing;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.beatroot.BeatRootOnsetEventHandler;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.onsets.ComplexOnsetDetector;
 import be.tarsos.dsp.onsets.PercussionOnsetDetector;
@@ -17,6 +16,7 @@ import imgui.type.ImInt;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -43,12 +43,12 @@ public final class Generator {
         complexSilenceThreshold.set(-70.0);
     }
     public static void generatePercussionChartsForSong() {
-        if (MusicPlayer.currentSong != null) {
+        if (MusicPlayer.currentAudio != null) {
             List<ImDouble[]> times = new ArrayList<>();
             CountDownLatch processingDone = new CountDownLatch(1);
 
             try {
-                AudioDispatcher dispatcher = AudioDispatcherFactory.fromFile(MusicPlayer.currentSong.toFile(), 2048, 1024);
+                AudioDispatcher dispatcher = AudioDispatcherFactory.fromFile(MusicPlayer.currentAudio.fullAudioPath.toFile(), 2048, 1024);
 
                 PercussionOnsetDetector onsetDetector = new PercussionOnsetDetector(dispatcher.getFormat().getSampleRate(), 2048, (time, salience) -> times.add(BeatFile.convertToImDoubleArray(time, 0)), 40, 1.0);
 
@@ -84,12 +84,12 @@ public final class Generator {
     }
 
     public static void generateComplexChartsForSong() {
-        if (MusicPlayer.currentSong != null) {
+        if (MusicPlayer.currentAudio != null) {
             List<ImDouble[]> times = new ArrayList<>();
             CountDownLatch processingDone = new CountDownLatch(1);
 
             try {
-                AudioDispatcher dispatcher = AudioDispatcherFactory.fromFile(MusicPlayer.currentSong.toFile(), 2048, 1024);
+                AudioDispatcher dispatcher = AudioDispatcherFactory.fromFile(MusicPlayer.currentAudio.fullAudioPath.toFile(), 2048, 1024);
 
                 ComplexOnsetDetector onsetDetector = new ComplexOnsetDetector(2048, 0.7, 0.1);
                 onsetDetector.setHandler((time, salience) -> times.add(BeatFile.convertToImDoubleArray(time, 0)));
@@ -127,21 +127,47 @@ public final class Generator {
         }
     }
 
+    /**
+     * Gets BPM
+     */
     public static void generateWithBeatExtractor() {
-        if (MusicPlayer.currentSong != null) {
-            Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false);
+        generateWithBeatExtractor("");
+    }
+
+    public static void generateWithBeatExtractor(String title) {
+        if (MusicPlayer.currentAudio != null) {
+            Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false, false, title);
             chart.timestamps.addAll(beatExtractor.run());
 
-            Data.charts.add(chart);
+            try {
+                Data.asyncChartsLock.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Data.asyncCharts.add(chart);
+            Data.asyncChartsLock.release();
         }
     }
 
+    /**
+     * Detects note separation
+     */
     public static void generateWithOnsetExtractor() {
-        if (MusicPlayer.currentSong != null) {
-            Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false);
-            chart.timestamps.addAll(onsetExtractor.run());
+        generateWithOnsetExtractor("", MusicPlayer.currentAudio.fullAudioPath);
+    }
 
-            Data.charts.add(chart);
+    public static void generateWithOnsetExtractor(String title, Path audioPath) {
+        if (MusicPlayer.currentAudio != null) {
+            Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false, false, title);
+            chart.timestamps.addAll(onsetExtractor.run(audioPath));
+
+            try {
+                Data.asyncChartsLock.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Data.asyncCharts.add(chart);
+            Data.asyncChartsLock.release();
         }
     }
 }

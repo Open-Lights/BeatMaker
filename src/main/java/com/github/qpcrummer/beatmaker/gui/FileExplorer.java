@@ -2,10 +2,12 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.audio.MusicPlayer;
 import com.github.qpcrummer.beatmaker.Main;
+import com.github.qpcrummer.beatmaker.audio.StemmedAudio;
 import imgui.ImGui;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTreeNodeFlags;
 import com.github.qpcrummer.beatmaker.processing.BeatFile;
+import imgui.flag.ImGuiWindowFlags;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -15,7 +17,6 @@ public class FileExplorer {
     private static final String folder = " (Folder)";
     private static File currentDirectory = new File(System.getProperty("user.dir"));
     private static File[] files;
-    public static boolean enabled;
 
     static {
         updateFiles();
@@ -29,9 +30,8 @@ public class FileExplorer {
     }
 
     public static void render() {
-        if (enabled) {
-            // Start a new frame
-            ImGui.begin("File Explorer");
+        if (ImGui.beginPopupModal("File Explorer", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoResize)) {
+            ImGui.setWindowSize(600f, 400f);
 
             // Back button
             if (ImGui.button("Back")) {
@@ -61,24 +61,24 @@ public class FileExplorer {
 
                         if (name.isBlank()) {
                             name = file.getPath();
-                        } else if (file.isDirectory()) {
-                            name = name + folder;
+                        }
+                        if (file.isDirectory()) {
+                            name += folder;
                         }
 
-                        ImGui.selectable(name, selectedFile != null && selectedFile.equals(file),
-                                ImGuiSelectableFlags.SpanAllColumns);
-
-                        // Check if the item is selected and a directory
-                        if (ImGui.isItemClicked(0) && file.isDirectory()) {
-                            // Change directory if a directory is clicked
-                            currentDirectory = file;
-                            updateFiles();
-                        }
-
-                        // Check if the item is selected and not a directory
-                        if (ImGui.isItemClicked(0) && !file.isDirectory()) {
-                            // Update the selected file
-                            selectedFile = file;
+                        if (ImGui.selectable(name, selectedFile != null && selectedFile.equals(file),
+                                ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.DontClosePopups)) {
+                            if (file.isDirectory()) {
+                                // Change directory if a directory is clicked
+                                currentDirectory = file;
+                                updateFiles();
+                                ImGui.treePop();
+                                ImGui.endPopup();
+                                return;
+                            } else {
+                                // Update the selected file
+                                selectedFile = file;
+                            }
                         }
                     }
                 }
@@ -93,13 +93,13 @@ public class FileExplorer {
                     Path path = selectedFile.toPath();
                     String fileExtension = getFileExtension(path.getFileName().toString());
 
-                    if (beatFileMode && fileExtension.equals("txt")) {
+                    if (beatFileMode && fileExtension.equals("json")) {
                         Main.logger.info("Uploading beat file: " + path);
                         BeatFile.loadBeatFile(path);
                         reset();
                     } else if (!beatFileMode && fileExtension.equals("wav")) {
                         Main.logger.info("Uploading wav file: " + path);
-                        MusicPlayer.currentSong = path;
+                        MusicPlayer.currentAudio = new StemmedAudio(path);
                         MusicPlayer.loadSong();
                         reset();
                     } else {
@@ -115,7 +115,7 @@ public class FileExplorer {
             }
 
             // End the frame
-            ImGui.end();
+            ImGui.endPopup();
         }
     }
 
@@ -138,7 +138,7 @@ public class FileExplorer {
     }
 
     private static void reset() {
-        enabled = false;
+        ImGui.closeCurrentPopup();
         selectedFile = null;
         Main.logger.info("Hiding File Explorer GUI");
     }

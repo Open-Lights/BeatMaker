@@ -2,6 +2,7 @@ package com.github.qpcrummer.beatmaker.gui;
 
 import com.github.qpcrummer.beatmaker.data.Data;
 import com.github.qpcrummer.beatmaker.processing.BeatManager;
+import com.github.qpcrummer.beatmaker.utils.Config;
 import com.github.qpcrummer.beatmaker.utils.ListUtils;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -9,10 +10,7 @@ import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
 import imgui.type.ImDouble;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class Chart {
     public final List<Integer> channels = new ArrayList<>();
@@ -22,23 +20,25 @@ public class Chart {
     private final int id;
     private boolean showChannelEditPopup = false;
     private int index = 0;
+    private final String title;
     private boolean immutable = false;
 
     public Chart(float width, int id, boolean generateEmptyTimeStamp) {
-        this.width = width;
-        this.id = id;
-        if (generateEmptyTimeStamp) {
-            this.timestamps.add(generateEmptyImDoubleArray());
-        }
+        this(width, id, generateEmptyTimeStamp, false);
     }
 
     public Chart(float width, int id, boolean generateEmptyTimeStamp, boolean immutable) {
+        this(width, id, generateEmptyTimeStamp, immutable, "");
+    }
+
+    public Chart(float width, int id, boolean generateEmptyTimeStamp, boolean immutable, String title) {
         this.width = width;
         this.id = id;
         if (generateEmptyTimeStamp) {
             this.timestamps.add(generateEmptyImDoubleArray());
         }
         this.immutable = immutable;
+        this.title = title;
     }
 
     // Rendering logic for the chart
@@ -52,6 +52,17 @@ public class Chart {
             if (!immutable) {
                 this.showChannelEditPopup = true;
             }
+        }
+
+        ImGui.setCursorPosX(x);
+        if (this.title.isEmpty() && !this.channels.isEmpty()) {
+            String str = Arrays.toString(this.channels.toArray());
+            if (str.length() > 21) {
+                str = str.substring(0, 18) + "...";
+            }
+            ImGui.text(str);
+        } else if (!this.title.isEmpty()) {
+            ImGui.text(this.title);
         }
 
         ImGui.setCursorPosX(x);
@@ -103,7 +114,7 @@ public class Chart {
         Iterator<ImDouble[]> iterator = this.timestamps.listIterator();
         int index = 0;
 
-        ImGui.setCursorPosX(x);
+        ImGui.setCursorPos(x, ImGui.getCursorPosY() - 15f);
         ImGui.beginChild("values##" + this.id, width + 15, ImGui.getIO().getDisplaySize().y - 8 * MainGUI.TOOLBAR_HEIGHT);
         while (iterator.hasNext()) {
             ImDouble[] doubles = iterator.next();
@@ -178,7 +189,7 @@ public class Chart {
             double last = this.timestamps.get(this.index)[1].get();
             double difference = last - first;
 
-            if (last == 0 || difference < Data.MINIMUM_BEAT_LENGTH) {
+            if (last == 0 || difference < Config.minBeatLength) {
                 difference = 0.2;
             }
 
