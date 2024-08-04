@@ -119,3 +119,8 @@ shadowJar {
         )
     }
 }
+
+tasks.register('printVersionName') {
+    println version
+}
+
