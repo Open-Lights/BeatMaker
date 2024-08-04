@@ -11,6 +11,8 @@ on: [workflow_dispatch]
 
 jobs:
   build:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,10 +31,7 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
-            
-      - name: Tidy cache
-        uses: skjolber/tidy-cache-github-action@v1  
+            ${{ runner.os }}-gradle- 
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -40,9 +39,19 @@ jobs:
       - name: Compile with Gradle
         run: ./gradlew build --no-daemon
 
+      - name : Retrieve Version
+        run: |
+           echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew -q printVersionName)"
+        id: project_version
+
+      - name: Save Version
+        run: |
+          echo "version_name=${{steps.project_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
+
       - name: Upload Jar
         uses: AButler/upload-release-assets@v3.0
         with:
           files: 'build/libs/*-all.jar'
           repo-token: ${{secrets.GITHUB_TOKEN}}
+          release-tag: ${{ env.version_name }}
       
