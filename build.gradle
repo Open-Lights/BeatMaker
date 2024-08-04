@@ -118,6 +118,8 @@ shadowJar {
                 'Main-Class': 'com.github.qpcrummer.beatmaker.Main'
         )
     }
+    archiveClassifier.set('')
+    archiveVersion.set('')
 }
 
 tasks.register('printVersionName') {

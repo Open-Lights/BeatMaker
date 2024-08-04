@@ -37,7 +37,7 @@ jobs:
         run: chmod +x gradlew
           
       - name: Compile with Gradle
-        run: ./gradlew build --no-daemon
+        run: ./gradlew shadowJar --no-daemon
 
       - name : Retrieve Version
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: Upload Jar
         uses: AButler/upload-release-assets@v3.0
         with:
-          files: 'build/libs/*-all.jar'
+          files: 'build/libs/*'
           repo-token: ${{secrets.GITHUB_TOKEN}}
           release-tag: ${{ env.version_name }}
       
