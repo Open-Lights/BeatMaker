@@ -49,9 +49,13 @@ jobs:
           echo "version_name=${{steps.project_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
 
       - name: Upload Jar
-        uses: AButler/upload-release-assets@v3.0
+        uses: marvinpinto/action-automatic-releases@latest
         with:
-          files: 'build/libs/*'
-          repo-token: ${{secrets.GITHUB_TOKEN}}
-          release-tag: ${{ env.version_name }}
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ env.version_name }}
+          prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
+          draft: true
+          title: "Open Lights BeatMaker ${{ env.version_name }}"
+          files: |
+            *.jar
       
