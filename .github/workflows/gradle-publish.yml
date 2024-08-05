@@ -16,12 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache: 'gradle'
 
       - name: Cache
         uses: actions/cache@v4
@@ -32,6 +26,13 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle- 
+      
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'gradle'
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -57,5 +58,5 @@ jobs:
           draft: true
           title: "Open Lights BeatMaker ${{ env.version_name }}"
           files: |
-            *.jar
+            build/libs/OpenLightsBeatMaker.jar
       
