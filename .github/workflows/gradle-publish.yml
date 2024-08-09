@@ -59,14 +59,14 @@ jobs:
         shell: bash
         id: project_version
 
-      - name : Retrieve OS
+      - name: Retrieve OS
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            os_name=$(${github.workspace//\//\\}\\gradlew.bat -q printOS)
+            os_name=$("${{ github.workspace }}\\gradlew.bat" -q printOS)
           else
-            os_name=$(${github.workspace}/gradlew -q printOS)
+            os_name=$("${{ github.workspace }}/gradlew" -q printOS)
           fi
-            echo "OS_NAME=$os_name" >> $GITHUB_ENV
+          echo "OS_NAME=$os_name" >> $GITHUB_ENV
         shell: bash
         id: os_version
 
