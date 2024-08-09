@@ -8,7 +8,7 @@ plugins {
 project.ext.lwjglVersion = "3.3.4"
 
 group = 'com.github.qpcrummer'
-version = '1.0.0-pre.2'
+version = '1.0.0-pre.3'
 
 repositories {
     mavenCentral()
@@ -93,7 +93,7 @@ shadowJar {
                 'Main-Class': 'com.github.qpcrummer.beatmaker.Main'
         )
     }
-    archiveClassifier.set('')
+    archiveClassifier.set("${osdetector.os}")
     archiveVersion.set('')
 }
 

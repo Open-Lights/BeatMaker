@@ -13,7 +13,15 @@ jobs:
   build:
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+          - os: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -49,14 +57,32 @@ jobs:
         run: |
           echo "version_name=${{steps.project_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
 
+      - name: Create Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jars
+          path: build/libs/
+
+  upload_release:
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: jars
+          path: build/libs/
+          merge-multiple: true
+
       - name: Upload Jar
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ env.version_name }}
           prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
-          draft: false
+          draft: true
           title: "Open Lights BeatMaker ${{ env.version_name }}"
           files: |
-            build/libs/OpenLightsBeatMaker.jar
+            build/libs/*.jar
       
