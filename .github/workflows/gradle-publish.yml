@@ -75,6 +75,7 @@ jobs:
           path: build/libs/
           merge-multiple: true
 
+# Switch to https://github.com/softprops/action-gh-release
       - name: Upload Jar
         uses: marvinpinto/action-automatic-releases@latest
         with:
