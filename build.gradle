@@ -101,3 +101,7 @@ tasks.register('printVersionName') {
     println version
 }
 
+tasks.register('printOS') {
+    println osdetector.os
+}
+

@@ -57,11 +57,21 @@ jobs:
         run: |
           echo "version_name=${{steps.project_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
 
+      - name : Retrieve OS
+        run: |
+          echo "::set-output name=OS_NAME::$(${{github.workspace}}/gradlew -q printOS)"
+        id: os_version
+
+      - name: Save OS
+        run: |
+          echo "os_name=${{steps.os_version.outputs.OS_NAME}}" >> $GITHUB_ENV
+
       - name: Create Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: jars
+          name: OpenLightsBeatMaker-${{ env.os_name }}
           path: build/libs/
+          compression-level: 0
 
   upload_release:
     needs: build
@@ -71,19 +81,17 @@ jobs:
       - name: Retrieve Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: jars
           path: build/libs/
           merge-multiple: true
 
-# Switch to https://github.com/softprops/action-gh-release
       - name: Upload Jar
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ env.version_name }}
-          prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
-          title: "Open Lights BeatMaker ${{ env.version_name }}"
-          files: |
-            build/libs/*.jar
+          tag_name: ${{ env.version_name }}
+          prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
+          name: Open Lights BeatMaker ${{ env.version_name }}
+          files: build/libs/*.jar
+          generate_release_notes: true
       
