@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'org.graalvm.buildtools.native' version '0.10.2'
     id 'com.google.osdetector' version '1.7.3'
     id "application"
 }
@@ -9,7 +8,7 @@ plugins {
 project.ext.lwjglVersion = "3.3.4"
 
 group = 'com.github.qpcrummer'
-version = '1.0.0-pre.1'
+version = '1.0.0-pre.2'
 
 repositories {
     mavenCentral()
@@ -45,7 +44,6 @@ ext {
     //LWJGL modules used: minimal OpenGL
     lwjglModules = ['lwjgl', 'lwjgl-assimp', 'lwjgl-glfw', 'lwjgl-openal', 'lwjgl-opengl', 'lwjgl-stb']
 
-    //mainClassName = 'com.github.qpcrummer.beatmaker.Main'
     currentPlatform = getCurrentPlatform()
 }
 
@@ -72,40 +70,17 @@ dependencies {
     }
 }
 
-task extractLwjglManifest(type: Copy) {
+tasks.register('extractLwjglManifest', Copy) {
     from {
         configurations.compileClasspath.filter { it.name == "lwjgl-${lwjglVersion}.jar" }
                 .collect { zipTree(it) }
     }
     include 'META-INF/MANIFEST.MF'
-    into "$buildDir/tmp"
+    into "$rootProject.layout.buildDirectory/tmp"
 }
 
 application {
     mainClassName = 'com.github.qpcrummer.beatmaker.Main'
-}
-
-graalvmNative {
-    toolchainDetection = false
-    binaries {
-        main {
-            imageName = "OpenLightsBeatMaker"
-            mainClass = "com.github.qpcrummer.beatmaker.Main"
-            debug = false
-            verbose = false
-            fallback = false
-
-            buildArgs.add('--initialize-at-run-time=org.lwjgl')
-            buildArgs.add('--initialize-at-run-time=io.imgui')
-            buildArgs.add('--native-image-info')
-            buildArgs.add('-march=compatibility')
-
-            useFatJar = false
-        }
-    }
-    metadataRepository {
-        enabled = false
-    }
 }
 
 test {

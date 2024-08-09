@@ -66,8 +66,8 @@ public class InstallationGUI extends Application {
                 throw new RuntimeException(e);
             }
         }
-        FileDownloadingUtils.downloadFile("https://github.com/QPCrummer/BeatMaker/blob/demucs/src/main/resources/assets/installation_background.png?raw=true", backgroundImg);
-        FileDownloadingUtils.downloadFile("https://github.com/QPCrummer/BeatMaker/blob/demucs/src/main/resources/assets/loading_bar.png?raw=true", loadingBarImg);
+        FileDownloadingUtils.downloadFile("https://github.com/Open-Lights/BeatMaker/blob/main/src/main/resources/assets/installation_background.png?raw=true", backgroundImg);
+        FileDownloadingUtils.downloadFile("https://github.com/Open-Lights/BeatMaker/blob/main/src/main/resources/assets/loading_bar.png?raw=true", loadingBarImg);
     }
 
     @Override
