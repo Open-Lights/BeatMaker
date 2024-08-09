@@ -8,7 +8,7 @@ plugins {
 project.ext.lwjglVersion = "3.3.4"
 
 group = 'com.github.qpcrummer'
-version = '1.0.0-pre.3'
+version = '1.0.0-pre.4'
 
 repositories {
     mavenCentral()
@@ -18,33 +18,13 @@ repositories {
     }
 }
 
-def getCurrentPlatform() {
-    def os = osdetector.os
-    def lwjglOS = os == 'linux' ? 'linux' :
-            os == 'osx' ? 'macos' :
-                    os == 'windows' ? 'windows' :
-                            'unknown'
-    if (lwjglOS == 'unknown')
-        throw new GradleException('Unsupported OS: ' + os)
-
-    def arch = osdetector.arch
-    //consider 64-bit architectures only
-    def lwjglArch = arch == 'x86_64' ? '' :
-            arch == 'aarch_64' ? 'arm64' :
-                    'unknown'
-    if (lwjglArch == 'unknown')
-        throw new GradleException('Unsupported Architecture: ' + arch)
-
-    return (lwjglArch == '' ? lwjglOS : (lwjglOS + '-' + lwjglArch))
-}
-
 ext {
     lwjglVersion = '3.3.4'
 
     //LWJGL modules used: minimal OpenGL
     lwjglModules = ['lwjgl', 'lwjgl-assimp', 'lwjgl-glfw', 'lwjgl-openal', 'lwjgl-opengl', 'lwjgl-stb']
 
-    currentPlatform = getCurrentPlatform()
+    platforms = ['windows', 'linux', 'macos']
 }
 
 dependencies {
@@ -62,11 +42,13 @@ dependencies {
     //get recommended dependency versions from the LWJGL BOM
     implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
 
-    //add LWJGL modules and the current OS's natives to the compile and runtime classpaths
-    lwjglModules.each {
-        implementation "org.lwjgl:$it"
-        if (it != 'lwjgl-egl')  //lwjgl-egl has no native libraries
-            runtimeOnly "org.lwjgl:$it::natives-$currentPlatform"
+    platforms.eachWithIndex { platform, index ->
+        //add LWJGL modules and the current OS's natives to the compile and runtime classpaths
+        lwjglModules.each {
+            implementation "org.lwjgl:$it"
+            if (it != 'lwjgl-egl')  //lwjgl-egl has no native libraries
+                runtimeOnly "org.lwjgl:$it::natives-${platform}"
+        }
     }
 }
 
@@ -93,7 +75,7 @@ shadowJar {
                 'Main-Class': 'com.github.qpcrummer.beatmaker.Main'
         )
     }
-    archiveClassifier.set("${osdetector.os}")
+    archiveClassifier.set('')
     archiveVersion.set('')
 }
 

@@ -13,15 +13,7 @@ jobs:
   build:
     permissions:
       contents: write
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-          - os: macos-latest
-          - os: windows-latest
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -48,55 +40,6 @@ jobs:
       - name: Compile with Gradle
         run: ./gradlew shadowJar --no-daemon
 
-      - name : Retrieve OS
-        run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "::set-output name=OS_NAME::windows"
-          elif [ "${{ runner.os }}" == "Linux" ]; then
-            echo "::set-output name=OS_NAME::linux"
-          elif [ "${{ runner.os }}" == "macOS" ]; then
-            echo "::set-output name=OS_NAME::macos"
-          fi
-        id: os_version
-        shell: bash
-
-      - name: Save OS
-        run: |
-          echo "os_name=${{steps.os_version.outputs.OS_NAME}}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Create Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: OpenLightsBeatMaker-${{ env.os_name }}
-          path: build/libs/
-          compression-level: 0
-
-  upload_release:
-    permissions:
-      contents: write
-    needs: build
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Retrieve Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: build/libs/
-          merge-multiple: true
-
-      - uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          cache: 'gradle'
-
-      - name: Make Gradlew Executable
-        run: chmod +x gradlew
-
       - name: Retrieve Version
         run: |
           echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew -q printVersionName)"
@@ -110,7 +53,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          draft: false
+          draft: true
           tag_name: ${{ env.version_name }}
           prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
           name: Open Lights BeatMaker ${{ env.version_name }}
