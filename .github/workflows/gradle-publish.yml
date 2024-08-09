@@ -51,11 +51,11 @@ jobs:
       - name : Retrieve OS
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            echo "OS_NAME=windows" >> $GITHUB_ENV
+            echo "::set-output name=OS_NAME::windows"
           elif [ "${{ runner.os }}" == "Linux" ]; then
-            echo "OS_NAME=linux" >> $GITHUB_ENV
+            echo "::set-output name=OS_NAME::linux"
           elif [ "${{ runner.os }}" == "macOS" ]; then
-            echo "OS_NAME=macOS" >> $GITHUB_ENV
+            echo "::set-output name=OS_NAME::macos"
           fi
         id: os_version
 
