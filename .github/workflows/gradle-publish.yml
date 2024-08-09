@@ -50,7 +50,7 @@ jobs:
 
       - name : Retrieve Version
         run: |
-           echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew -q printVersionName)"
+           echo "VERSION_NAME=$(${{github.workspace}}/gradlew -q printVersionName)" >> $GITHUB_OUTPUT
         id: project_version
 
       - name: Save Version
@@ -59,7 +59,7 @@ jobs:
 
       - name : Retrieve OS
         run: |
-          echo "::set-output name=OS_NAME::$(${{github.workspace}}/gradlew -q printOS)"
+          echo "OS_NAME=$(${{github.workspace}}/gradlew -q printOS)" >> $GITHUB_ENV
         id: os_version
 
       - name: Save OS
@@ -87,7 +87,6 @@ jobs:
       - name: Upload Jar
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           draft: true
           tag_name: ${{ env.version_name }}
           prerelease: ${{ contains(env.version_name, 'pre') || contains(env.version_name, 'beta') || contains(env.version_name, 'rc') }}
