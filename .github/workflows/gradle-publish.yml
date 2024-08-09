@@ -73,6 +73,8 @@ jobs:
           compression-level: 0
 
   upload_release:
+    permissions:
+      contents: write
     needs: build
     if: always()
     runs-on: ubuntu-latest
