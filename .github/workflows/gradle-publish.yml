@@ -48,31 +48,22 @@ jobs:
       - name: Compile with Gradle
         run: ./gradlew shadowJar --no-daemon
 
-      - name : Retrieve OS (Linux/MacOS)
-        if: "${{ runner.os }}" != "Windows"
+      - name : Retrieve OS
         run: |
-          if [ "${{ runner.os }}" == "Linux" ]; then
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            echo "::set-output name=OS_NAME::windows"
+          elif [ "${{ runner.os }}" == "Linux" ]; then
             echo "::set-output name=OS_NAME::linux"
           elif [ "${{ runner.os }}" == "macOS" ]; then
             echo "::set-output name=OS_NAME::macos"
           fi
         id: os_version
+        shell: bash
 
-      - name: Retrieve OS (Windows)
-        if: "${{ runner.os }}" == "Windows"
-        run: |
-          echo "::set-output name=OS_NAME::windows"
-        id: os_version_win
-
-      - name: Save OS (Linux/MacOS)
-        if: "${{ runner.os }}" != "Windows"
+      - name: Save OS
         run: |
           echo "os_name=${{steps.os_version.outputs.OS_NAME}}" >> $GITHUB_ENV
-
-      - name: Save OS (Windows)
-        if: "${{ runner.os }}" == "Windows"
-        run: |
-          echo "os_name=${{steps.os_version_win.outputs.OS_NAME}}" >> $GITHUB_ENV
+        shell: bash
 
       - name: Create Artifacts
         uses: actions/upload-artifact@v4
