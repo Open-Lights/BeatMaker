@@ -56,6 +56,7 @@ jobs:
              version_name=$(${github.workspace}/gradlew -q printVersionName)
            fi
              echo "VERSION_NAME=$version_name" >> $GITHUB_ENV
+        shell: bash
         id: project_version
 
       - name : Retrieve OS
@@ -66,6 +67,7 @@ jobs:
             os_name=$(${github.workspace}/gradlew -q printOS)
           fi
             echo "OS_NAME=$os_name" >> $GITHUB_ENV
+        shell: bash
         id: os_version
 
       - name: Create Artifacts
