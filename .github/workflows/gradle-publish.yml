@@ -66,13 +66,13 @@ jobs:
         shell: bash
 
       - name: Retrieve Version
-        if: env.os_name == "linux" # Only run this once
+        if: env.os_name == 'linux' # Only run this once
         run: |
           echo "::set-output name=VERSION_NAME::$(${{github.workspace}}/gradlew -q printVersionName)"
         id: project_version
 
       - name: Save Version
-        if: env.os_name == "linux" # Only run this once
+        if: env.os_name == 'linux' # Only run this once
         run: |
           echo "version_name=${{steps.project_version.outputs.VERSION_NAME}}" >> $GITHUB_ENV
 
