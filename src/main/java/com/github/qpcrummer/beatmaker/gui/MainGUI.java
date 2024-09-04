@@ -98,6 +98,9 @@ public class MainGUI {
                 if (ImGui.menuItem("Generate Onset Extractor Beat Files")) {
                     Generator.generateWithOnsetExtractor();
                 }
+                if (ImGui.menuItem("Generate Pitch Extractor Beat Files")) {
+                    Generator.generateWithPitchExtractor();
+                }
                 if (ImGui.menuItem("Generator Configuration")) {
                     openGenerator = true;
                 }

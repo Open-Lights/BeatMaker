@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class Main extends Application {
     private long previousTime = System.currentTimeMillis();
-    private int targetFrameRate = 15;
+    private final int targetFrameRate = 15;
     public static final int WINDOW_WIDTH = 800;
     public static final int WINDOW_HEIGHT = 600;
     public static final Logger logger = Logger.getLogger("Open Lights BeatMaker");

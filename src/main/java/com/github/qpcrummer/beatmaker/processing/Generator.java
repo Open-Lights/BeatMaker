@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class Generator {
     private static final BeatOnsetExtractor beatExtractor = new BeatOnsetExtractor();
     private static final GeneralOnsetExtractor onsetExtractor = new GeneralOnsetExtractor();
+    private static final PitchExtractor pitchExtractor = new PitchExtractor();
     public static final ImInt percussionSensitivity = new ImInt();
     public static final ImDouble percussionThreshold = new ImDouble();
     public static final ImDouble complexPeakThreshold = new ImDouble();
@@ -160,6 +161,28 @@ public final class Generator {
         if (MusicPlayer.currentAudio != null) {
             Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false, false, title);
             chart.timestamps.addAll(onsetExtractor.run(audioPath));
+
+            try {
+                Data.asyncChartsLock.acquire();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Data.asyncCharts.add(chart);
+            Data.asyncChartsLock.release();
+        }
+    }
+
+    /**
+     * Detects pitch changes
+     */
+    public static void generateWithPitchExtractor() {
+        generateWithPitchExtractor("", MusicPlayer.currentAudio.fullAudioPath);
+    }
+
+    public static void generateWithPitchExtractor(String title, Path audioPath) {
+        if (MusicPlayer.currentAudio != null) {
+            Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false, false, title);
+            chart.timestamps.addAll(pitchExtractor.run(audioPath));
 
             try {
                 Data.asyncChartsLock.acquire();
