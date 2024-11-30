@@ -11,9 +11,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import imgui.type.ImDouble;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.*;
@@ -117,8 +115,12 @@ public class BeatFile {
         return new ImDouble[] {imFirst, imLast};
     }
 
-    public static void loadBeatFile(Path beatFile) {
-        Data.charts.addAll(readBeatsFromJson(beatFile));
+    public static void loadBeatFile(Path beatFile, boolean legacy) {
+        if (legacy) {
+            Data.charts.add(readBeatsLegacy(beatFile));
+        } else {
+            Data.charts.addAll(readBeatsFromJson(beatFile));
+        }
     }
 
     private static Integer[] fromString(String string) {
@@ -149,11 +151,66 @@ public class BeatFile {
                 }
                 chart.timestamps.addAll(imDoubles);
                 chart.channels.addAll(List.of(fromString(channels)));
+                Data.availableChannels.removeIf(chart.channels::contains);
+
                 charts.add(chart);
             }
         } catch (IOException e) {
             Main.logger.warning("Failed to read beat file: " + e.getMessage());
         }
         return charts;
+    }
+
+    private static Chart readBeatsLegacy(Path filePath) {
+        Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false);
+
+        // Get Channel
+        String fileName = filePath.getFileName().toString();
+        int dashIndex = fileName.lastIndexOf('-');
+        int dotIndex = fileName.lastIndexOf('.');
+        String numberStr = fileName.substring(dashIndex + 1, dotIndex);
+        int channel = Integer.parseInt(numberStr);
+        chart.channels.add(channel);
+
+        for (Integer integer: Data.availableChannels) {
+            if (integer == channel) {
+                Data.availableChannels.remove(integer);
+                break;
+            }
+        }
+
+        // Parse
+        List<ImDouble[]> timestamps = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath.toFile()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.startsWith("[")) {
+                    // Handle held beats
+                    String[] parts = line.substring(1, line.length() - 1).split(",\\s*");
+                    if (parts.length == 2) {
+                        long first = Long.parseLong(parts[0]) / 1000;
+                        long second = Long.parseLong(parts[1]) / 1000;
+                        timestamps.add(new ImDouble[] {
+                                new ImDouble(millisecondsToSecondsFormatted(first)),
+                                new ImDouble(millisecondsToSecondsFormatted(second))
+                        });
+                    }
+                } else {
+                    // Handle single beats
+                    long timestamp = Long.parseLong(line) / 1000;
+                    timestamps.add(new ImDouble[] {
+                            new ImDouble(millisecondsToSecondsFormatted(timestamp)),
+                            new ImDouble(0)
+                    });
+                }
+            }
+        } catch (IOException e) {
+            Main.logger.warning("Failed to read legacy beat file: " + e.getMessage());
+        }
+
+        chart.timestamps.addAll(timestamps);
+        return chart;
     }
 }

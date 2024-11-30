@@ -93,11 +93,16 @@ public class FileExplorer {
                     Path path = selectedFile.toPath();
                     String fileExtension = getFileExtension(path.getFileName().toString());
 
-                    if (beatFileMode && fileExtension.equals("json")) {
-                        Main.logger.info("Uploading beat file: " + path);
-                        BeatFile.loadBeatFile(path);
+                    if (beatFileMode) {
+                        if (fileExtension.equals("json")) {
+                            Main.logger.info("Uploading beat file: " + path);
+                            BeatFile.loadBeatFile(path, false);
+                        } else if (fileExtension.equals("txt")) {
+                            Main.logger.info("Uploading legacy beat file: " + path);
+                            BeatFile.loadBeatFile(path, true);
+                        }
                         reset();
-                    } else if (!beatFileMode && fileExtension.equals("wav")) {
+                    } else if (fileExtension.equals("wav")) {
                         Main.logger.info("Uploading wav file: " + path);
                         MusicPlayer.currentAudio = new StemmedAudio(path);
                         MusicPlayer.loadSong();

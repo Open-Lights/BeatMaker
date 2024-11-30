@@ -204,4 +204,11 @@ public class Chart {
     public void resetBeats() {
         this.index = 0;
     }
+
+    public String getTitle(int index) {
+        if (this.title.isEmpty()) {
+            return "Unknown" + index;
+        }
+        return this.title;
+    }
 }

@@ -2,46 +2,58 @@ package com.github.qpcrummer.beatmaker.utils;
 
 import imgui.type.ImDouble;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 public final class Comparer {
+
     /**
-     * Compares two lists and removes overlap;
-     * @param list1 First list to compare. This one always gets the interval removed!
-     * @param list2 Second list to compare
-     * @return A new list that is combining the two above
+     * Removes overlap from the later Chart
+     * @param list1 Chart 1's timestamps
+     * @param list2 Chart 2's timestamps
+     * @return Combined list of both charts with removed overlap
      */
     public static List<ImDouble[]> removeOverlap(List<ImDouble[]> list1, List<ImDouble[]> list2) {
-        int list1LowIndex = 0;
-        int list1HighIndex = 0;
-        // Determine which is better
-        List<ImDouble[]> bigger = List.copyOf(list1).getFirst()[0].get() > list2.getFirst()[0].get() ? list1 : list2;
-        List<ImDouble[]> smaller = List.copyOf(list1).getFirst()[0].get() < list2.getFirst()[0].get() ? list1 : list2;
+        double listOneStartVal = list1.getFirst()[0].get();
+        double listTwoStartVal = list2.getFirst()[0].get();
 
-        // Find low index
-        for (int i = 0; i < smaller.size(); i++) {
-            if (smaller.get(i)[1].get() > bigger.getFirst()[0].get()) {
-                list1LowIndex = i;
-                break;
+        if (listOneStartVal < listTwoStartVal) {
+            double listOneEndVal = list1.getLast()[1].get();
+            if (listOneEndVal == 0) {
+                listOneEndVal = list1.getLast()[0].get();
+            }
+
+            ListIterator<ImDouble[]> iterator = list2.listIterator();
+            while (iterator.hasNext()) {
+                ImDouble[] timestamp = iterator.next();
+                if (timestamp[0].get() < listOneEndVal) {
+                    iterator.remove();
+                } else {
+                    break;
+                }
+            }
+        } else {
+            double listTwoEndVal = list2.getLast()[1].get();
+            if (listTwoEndVal == 0) {
+                listTwoEndVal = list2.getLast()[0].get();
+            }
+
+            ListIterator<ImDouble[]> iterator = list1.listIterator();
+            while (iterator.hasNext()) {
+                ImDouble[] timestamp = iterator.next();
+                if (timestamp[0].get() < listTwoEndVal) {
+                    iterator.remove();
+                } else {
+                    break;
+                }
             }
         }
 
-        // Find high index
-        for (int i = smaller.size() - 1; i >= 0; i--) {
-            if (smaller.get(i)[0].get() < bigger.getLast()[1].get()) {
-                list1HighIndex = i;
-                break;
-            }
-        }
+        List<ImDouble[]> newList = new ArrayList<>(list1);
+        newList.addAll(list2);
 
-        // Mass deletion
-        for (int i = list1HighIndex - list1LowIndex; i >= 0; i--) {
-            smaller.remove(list1LowIndex);
-        }
-
-        smaller.addAll(bigger);
-        ListUtils.sortImDouble(smaller);
-
-        return smaller;
+        ListUtils.sortImDouble(newList);
+        return newList;
     }
 }

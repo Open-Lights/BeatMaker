@@ -22,7 +22,7 @@ public class BeatGuideInteractionGUI {
             int index = 0;
             for (Chart chart : Data.charts) {
                 boolean contains = toBeRemoved.contains(chart);
-                if (ImGui.checkbox("chartSelected" + index, contains)) {
+                if (ImGui.checkbox(chart.getTitle(index), contains)) {
                     if (contains) {
                         toBeRemoved.remove(chart);
                     } else {
@@ -35,24 +35,29 @@ public class BeatGuideInteractionGUI {
             if (ImGui.button(toBeRemoved.isEmpty() ? "Close" : removal ? "Delete" : "Merge")) {
                 if (!removal) {
                     List<ImDouble[]> outcome = new ArrayList<>();
+                    List<Integer> channels = new ArrayList<>();
 
                     for (Chart chart : toBeRemoved) {
+                        for (Integer channel: chart.channels) {
+                            if (!channels.contains(channel)) {
+                                channels.add(channel);
+                            }
+                        }
+
                         if (outcome.isEmpty()) {
                             outcome.addAll(chart.timestamps);
                         } else {
-                            List<ImDouble[]> newList = Comparer.removeOverlap(outcome, chart.timestamps);
-                            System.out.println(newList.size());
-                            outcome = newList;
+                            outcome = Comparer.removeOverlap(outcome, chart.timestamps);
                         }
                     }
 
                     Chart chart = new Chart(MainGUI.CHART_WIDTH, ThreadLocalRandom.current().nextInt(), false);
                     chart.timestamps.addAll(outcome);
+                    chart.channels.addAll(channels);
                     Data.charts.add(chart);
                 }
 
                 for (Chart chart : toBeRemoved) {
-                    chart.onRemoval();
                     Data.charts.remove(chart);
                 }
                 toBeRemoved.clear();
